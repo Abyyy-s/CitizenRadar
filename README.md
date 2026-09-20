@@ -130,6 +130,10 @@ CitizenRadar/
 
 ## Getting Started
 
+> 📖 **Team Setup Guides**:
+> - 💻 **For Windows Teammates (5 members)**: Follow the **[Windows Setup Guide in SETUP.md](SETUP.md#-windows-setup-guide)** (or double-click `setup-windows.bat`).
+> - 🐧 **For Fedora Linux**: Follow the **[Fedora Linux Setup Guide in SETUP.md](SETUP.md#-fedora-linux-setup-guide)** (or run `./setup-fedora.sh`).
+
 ### 1. Prerequisites
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or higher
