@@ -1,0 +1,25 @@
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+.vscode/
+
+# Large binaries & model weights (download/export locally)
+*.onnx
+*.pt
+*.pth
+*.weights
+
+# Runtime outputs & test media
+output/
+*.mp4
+*.avi
+*.mkv
+*.csv
+
+# OS specific files
+.DS_Store
+Thumbs.db
