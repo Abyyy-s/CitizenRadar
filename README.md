@@ -152,16 +152,17 @@ cd CitizenRadar
 dotnet restore
 ```
 
-### 4. Prepare YOLOv8 ONNX Model
+### 4. Download YOLOv8 ONNX Model
 
-Export the standard YOLOv8 nano model to ONNX format (one-time setup):
+Download the pre-exported YOLOv8 nano ONNX model directly (no Python needed):
 
 ```bash
-pip install ultralytics
-yolo export model=yolov8n.pt format=onnx imgsz=640
+# Linux / macOS / Windows PowerShell
+mkdir -p CitizenRadar/models
+curl -L -o CitizenRadar/models/yolov8n.onnx https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8n.onnx
 ```
 
-Place the resulting `yolov8n.onnx` file in `CitizenRadar/models/yolov8n.onnx`.
+*(On Windows, you can alternatively just double-click `setup-windows.bat` to download it automatically).*
 
 ---
 
