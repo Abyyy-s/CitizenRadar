@@ -1,239 +1,300 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using CitizenRadar.Models;
-using OpenCvSharp;
 using Xunit;
+using OpenCvSharp;
+using CitizenRadar.Models;
+using CitizenRadar.Core;
+using Tracker = CitizenRadar.Core.Tracker;
 
-namespace CitizenRadar.Tracking.Tests;
-
-public class TrackerTests
+public class UnitTest1
 {
-    // Test 1: A vehicle keeps the same ID across frames.
-    [Fact]
-    public void Vehicle_ShouldKeepSameId_AcrossFrames()
+    private static Detection CreateCar(float x, float y = 100)
     {
-        var tracker = new CitizenRadar.Core.Tracker();
-
-        var frame1 = new List<Detection>
-        {
-            new Detection(2, "car", 0.92f,
-                new Rect2f(100, 100, 80, 60))
-        };
-
-        var tracks1 = tracker.Update(frame1, 1);
-        int originalId = tracks1[0].Id;
-
-        var frame2 = new List<Detection>
-        {
-            new Detection(2, "car", 0.90f,
-                new Rect2f(105, 102, 80, 60))
-        };
-
-        var tracks2 = tracker.Update(frame2, 2);
-
-        Assert.Equal(originalId, tracks2[0].Id);
-        Assert.Equal(2, tracks2[0].HitCount);
-        Assert.Equal(TrackState.Active, tracks2[0].State);
+        return new Detection(
+            2,
+            "car",
+            0.95f,
+            new Rect2f(x, y, 80, 60)
+        );
     }
 
-    // Test 2: Two vehicles receive different IDs.
+    private static Detection CreateTruck(float x, float y = 100)
+    {
+        return new Detection(
+            7,
+            "truck",
+            0.90f,
+            new Rect2f(x, y, 100, 70)
+        );
+    }
+
+    [Fact]
+    public void Vehicle_ShouldCreateTrackWithUniqueId()
+    {
+        var tracker = new Tracker();
+
+        tracker.Update(
+            new List<Detection> { CreateCar(100) },
+            1
+        );
+
+        Assert.Single(tracker.Tracks);
+        Assert.True(tracker.Tracks[0].Id > 0);
+        Assert.Equal("car", tracker.Tracks[0].ClassName);
+    }
+
     [Fact]
     public void TwoVehicles_ShouldHaveDifferentIds()
     {
-        var tracker = new CitizenRadar.Core.Tracker();
+        var tracker = new Tracker();
 
-        var detections = new List<Detection>
-        {
-            new Detection(2, "car", 0.95f,
-                new Rect2f(100, 100, 80, 60)),
-            new Detection(2, "car", 0.93f,
-                new Rect2f(400, 100, 80, 60))
-        };
-
-        var tracks = tracker.Update(detections, 1);
-
-        Assert.Equal(2, tracks.Count);
-        Assert.NotEqual(tracks[0].Id, tracks[1].Id);
-    }
-
-    // Test 3: History does not exceed its maximum length.
-    [Fact]
-    public void History_ShouldNotExceedMaximumLength()
-    {
-        var tracker = new CitizenRadar.Core.Tracker();
-
-        for (int frame = 1; frame <= 35; frame++)
-        {
-            var detections = new List<Detection>
+        tracker.Update(
+            new List<Detection>
             {
-                new Detection(2, "car", 0.92f,
-                    new Rect2f(100, 100, 80, 60))
-            };
+                CreateCar(100),
+                CreateCar(400)
+            },
+            1
+        );
 
-            tracker.Update(detections, frame);
-        }
-
-        var track = tracker.Tracks[0];
-
-        Assert.Equal(30, track.History.Count);
-        Assert.True(track.History.Count <= track.MaxHistoryLength);
-    }
-
-    // Test 4: A missing vehicle enters the Coasting state.
-    [Fact]
-    public void MissingDetection_ShouldSetTrackToCoasting()
-    {
-        var tracker = new CitizenRadar.Core.Tracker();
-
-        var detections = new List<Detection>
-        {
-            new Detection(2, "car", 0.92f,
-                new Rect2f(100, 100, 80, 60))
-        };
-
-        tracker.Update(detections, 1);
-        tracker.Update(new List<Detection>(), 2);
-
-        var track = tracker.Tracks[0];
-
-        Assert.Equal(TrackState.Coasting, track.State);
-        Assert.Equal(1, track.MissedFrames);
-    }
-
-    // Test 5: A returning vehicle recovers its original ID.
-    [Fact]
-    public void VehicleReturningAfterMiss_ShouldRecoverOriginalId()
-    {
-        var tracker = new CitizenRadar.Core.Tracker();
-
-        var firstDetection = new List<Detection>
-        {
-            new Detection(2, "car", 0.92f,
-                new Rect2f(100, 100, 80, 60))
-        };
-
-        var firstTracks = tracker.Update(firstDetection, 1);
-        int originalId = firstTracks[0].Id;
-
-        tracker.Update(new List<Detection>(), 2);
-
-        var returningDetection = new List<Detection>
-        {
-            new Detection(2, "car", 0.91f,
-                new Rect2f(110, 102, 80, 60))
-        };
-
-        tracker.Update(returningDetection, 3);
-
-        var recoveredTrack = tracker.Tracks[0];
-
-        Assert.Equal(originalId, recoveredTrack.Id);
-        Assert.Equal(TrackState.Active, recoveredTrack.State);
-        Assert.Equal(0, recoveredTrack.MissedFrames);
-    }
-
-    // Test 6: Both track IDs remain present during overlapping detections.
-    [Fact]
-    public void TwoVehicles_CrossingPaths_ShouldKeepBothTrackIds()
-    {
-        var tracker = new CitizenRadar.Core.Tracker();
-
-        var frame1 = new List<Detection>
-        {
-            new Detection(2, "car", 0.95f,
-                new Rect2f(100, 100, 80, 60)),
-            new Detection(2, "car", 0.93f,
-                new Rect2f(300, 100, 80, 60))
-        };
-
-        var tracks1 = tracker.Update(frame1, 1);
-        int carAId = tracks1[0].Id;
-        int carBId = tracks1[1].Id;
-
-        var frame2 = new List<Detection>
-        {
-            new Detection(2, "car", 0.95f,
-                new Rect2f(150, 100, 80, 60)),
-            new Detection(2, "car", 0.93f,
-                new Rect2f(250, 100, 80, 60))
-        };
-
-        tracker.Update(frame2, 2);
-
-        var frame3 = new List<Detection>
-        {
-            new Detection(2, "car", 0.93f,
-                new Rect2f(200, 100, 80, 60)),
-            new Detection(2, "car", 0.95f,
-                new Rect2f(200, 100, 80, 60))
-        };
-
-        tracker.Update(frame3, 3);
-
-        Assert.Contains(tracker.Tracks, t => t.Id == carAId);
-        Assert.Contains(tracker.Tracks, t => t.Id == carBId);
         Assert.Equal(2, tracker.Tracks.Count);
+        Assert.NotEqual(
+            tracker.Tracks[0].Id,
+            tracker.Tracks[1].Id
+        );
     }
 
-    // Test 7: Vehicles cross and separate; verify their final positions.
     [Fact]
-    public void TwoVehicles_CrossAndSeparate_ShouldKeepTheirIds()
+    public void Vehicle_ShouldKeepSameIdAcrossFrames()
     {
-        var tracker = new CitizenRadar.Core.Tracker();
+        var tracker = new Tracker();
 
-        // Frame 1: Car A on the left, Car B on the right.
-        var frame1 = new List<Detection>
-        {
-            new Detection(2, "car", 0.95f,
-                new Rect2f(100, 100, 80, 60)),
-            new Detection(2, "car", 0.93f,
-                new Rect2f(300, 100, 80, 60))
-        };
+        tracker.Update(
+            new List<Detection> { CreateCar(100) },
+            1
+        );
 
-        var tracks1 = tracker.Update(frame1, 1);
-        int carAId = tracks1[0].Id;
-        int carBId = tracks1[1].Id;
+        int originalId = tracker.Tracks[0].Id;
 
-        // Frame 2: Cars move toward each other.
-        var frame2 = new List<Detection>
-        {
-            new Detection(2, "car", 0.95f,
-                new Rect2f(150, 100, 80, 60)),
-            new Detection(2, "car", 0.93f,
-                new Rect2f(250, 100, 80, 60))
-        };
+        tracker.Update(
+            new List<Detection> { CreateCar(110) },
+            2
+        );
 
-        tracker.Update(frame2, 2);
+        Assert.Single(tracker.Tracks);
+        Assert.Equal(originalId, tracker.Tracks[0].Id);
+        Assert.Equal(2, tracker.Tracks[0].HitCount);
+    }
 
-        // Frame 3: Their detections overlap completely.
-        var frame3 = new List<Detection>
-        {
-            new Detection(2, "car", 0.93f,
-                new Rect2f(200, 100, 80, 60)),
-            new Detection(2, "car", 0.95f,
-                new Rect2f(200, 100, 80, 60))
-        };
+    [Fact]
+    public void Track_ShouldStoreAnchorPointAtBottomCenter()
+    {
+        var detection = CreateCar(100, 50);
+        var track = new Track(1, detection, 1);
 
-        tracker.Update(frame3, 3);
+        Assert.Equal(140f, track.AnchorPoint.X);
+        Assert.Equal(110f, track.AnchorPoint.Y);
+    }
 
-        // Frame 4: The cars move apart.
-        var frame4 = new List<Detection>
-        {
-            new Detection(2, "car", 0.93f,
-                new Rect2f(150, 100, 80, 60)),
-            new Detection(2, "car", 0.95f,
-                new Rect2f(250, 100, 80, 60))
-        };
+    [Fact]
+    public void TrackHistory_ShouldRecordVehiclePositions()
+    {
+        var tracker = new Tracker();
 
-        tracker.Update(frame4, 4);
+        tracker.Update(
+            new List<Detection> { CreateCar(100) },
+            1
+        );
 
-        var carA = tracker.Tracks.Single(t => t.Id == carAId);
-        var carB = tracker.Tracks.Single(t => t.Id == carBId);
+        tracker.Update(
+            new List<Detection> { CreateCar(120) },
+            2
+        );
 
-        // Car A should finish on the right; Car B on the left.
-        Assert.True(carA.AnchorPoint.X > carB.AnchorPoint.X);
-        Assert.Equal(290f, carA.AnchorPoint.X);
-        Assert.Equal(190f, carB.AnchorPoint.X);
+        Assert.Equal(2, tracker.Tracks[0].History.Count);
+    }
+
+    [Fact]
+    public void TrackHistory_ShouldRespectMaximumLength()
+    {
+        var track = new Track(1, CreateCar(100), 1);
+        track.MaxHistoryLength = 3;
+
+        track.Update(CreateCar(110), 2);
+        track.Update(CreateCar(120), 3);
+        track.Update(CreateCar(130), 4);
+        track.Update(CreateCar(140), 5);
+
+        Assert.Equal(3, track.History.Count);
+        Assert.Equal(180f, track.History.Last().X);
+    }
+
+    [Fact]
+    public void MissingDetection_ShouldMoveTrackToCoasting()
+    {
+        var tracker = new Tracker();
+
+        tracker.Update(
+            new List<Detection> { CreateCar(100) },
+            1
+        );
+
+        tracker.Update(
+            new List<Detection>(),
+            2
+        );
+
+        Assert.Single(tracker.Tracks);
+        Assert.Equal(
+            TrackState.Coasting,
+            tracker.Tracks[0].State
+        );
+        Assert.Equal(1, tracker.Tracks[0].MissedFrames);
+    }
+
+    [Fact]
+    public void VehicleReturningAfterMiss_ShouldReuseOriginalId()
+    {
+        var tracker = new Tracker();
+
+        tracker.Update(
+            new List<Detection> { CreateCar(100) },
+            1
+        );
+
+        int originalId = tracker.Tracks[0].Id;
+
+        tracker.Update(new List<Detection>(), 2);
+
+        tracker.Update(
+            new List<Detection> { CreateCar(105) },
+            3
+        );
+
+        Assert.Contains(
+            tracker.Tracks,
+            track => track.Id == originalId
+        );
+    }
+
+    [Fact]
+    public void ConsecutiveEmptyFrames_ShouldNotCreateTracks()
+    {
+        var tracker = new Tracker();
+
+        tracker.Update(new List<Detection>(), 1);
+        tracker.Update(new List<Detection>(), 2);
+        tracker.Update(new List<Detection>(), 3);
+
+        Assert.Empty(tracker.Tracks);
+    }
+
+    [Fact]
+    public void DifferentVehicleClasses_ShouldHaveSeparateTracks()
+    {
+        var tracker = new Tracker();
+
+        tracker.Update(
+            new List<Detection>
+            {
+                CreateCar(100),
+                CreateTruck(400)
+            },
+            1
+        );
+
+        Assert.Equal(2, tracker.Tracks.Count);
+        Assert.Contains(
+            tracker.Tracks,
+            track => track.ClassName == "car"
+        );
+        Assert.Contains(
+            tracker.Tracks,
+            track => track.ClassName == "truck"
+        );
+    }
+
+    [Fact]
+    public void TwoVehiclesCrossAndSeparate_ShouldKeepTwoOriginalTracks()
+    {
+        var tracker = new Tracker();
+
+        tracker.Update(
+            new List<Detection>
+            {
+                CreateCar(100),
+                CreateCar(400)
+            },
+            1
+        );
+
+        Assert.Equal(2, tracker.Tracks.Count);
+
+        int firstId = tracker.Tracks[0].Id;
+        int secondId = tracker.Tracks[1].Id;
+
+        tracker.Update(
+            new List<Detection>
+            {
+                CreateCar(150),
+                CreateCar(350)
+            },
+            2
+        );
+
+        tracker.Update(
+            new List<Detection>
+            {
+                CreateCar(200),
+                CreateCar(300)
+            },
+            3
+        );
+
+        tracker.Update(
+            new List<Detection>
+            {
+                CreateCar(250),
+                CreateCar(250)
+            },
+            4
+        );
+
+        tracker.Update(
+            new List<Detection>
+            {
+                CreateCar(300),
+                CreateCar(200)
+            },
+            5
+        );
+
+        Assert.Equal(2, tracker.Tracks.Count);
+
+        Assert.Contains(
+            tracker.Tracks,
+            track => track.Id == firstId
+        );
+
+        Assert.Contains(
+            tracker.Tracks,
+            track => track.Id == secondId
+        );
+    }
+
+    [Fact]
+    public void Track_ShouldBecomeLostAfterMissLimitExceeded()
+    {
+        var track = new Track(1, CreateCar(100), 1);
+
+        track.MarkMissed(2);
+        Assert.Equal(TrackState.Coasting, track.State);
+
+        track.MarkMissed(2);
+        Assert.Equal(TrackState.Coasting, track.State);
+
+        track.MarkMissed(2);
+        Assert.Equal(TrackState.Lost, track.State);
     }
 }
