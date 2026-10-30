@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CitizenRadar | Event Log</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <aside class="app-sidebar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark"><span></span><i></i></span>
+      <span class="brand-copy">
+        <strong>Citizen<span>Radar</span></strong>
+        <small>Traffic Monitoring</small>
+      </span>
+    </a>
+
+    <nav class="side-nav">
+      <a class="nav-item" href="index.html"><span class="nav-icon">▣</span><span>Live Monitor</span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon">▥</span><span>Analytics</span></a>
+      <a class="nav-item active" href="events.html"><span class="nav-icon">▤</span><span>Event Log</span></a>
+      <a class="nav-item" href="calibration.html"><span class="nav-icon">⌖</span><span>Road Calibration</span></a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙</span><span>System Settings</span></a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="road-art"><span></span><span></span><span></span></div>
+      <p>Safer roads.<br><strong>Stronger communities.</strong></p>
+      <span class="sidebar-rule"></span>
+      <small>TRAFFIC SAFETY SYSTEM</small>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="page-heading">
+        <p class="eyebrow">CITIZENRADAR / EVENTS</p>
+        <h1>Traffic Event Log</h1>
+        <p>Review detected speed violations</p>
+      </div>
+      <a class="btn btn-outline" href="index.html">← Live Monitor</a>
+    </header>
+
+    <main class="page-body">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Violation records</h2>
+            <p>Vehicle events captured by the monitoring system</p>
+          </div>
+          <span class="status-good">● Event records</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Vehicle ID</th>
+                <th>Vehicle class</th>
+                <th>Speed</th>
+                <th>Speed limit</th>
+                <th>Excess</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="6" style="text-align:center;padding:28px;color:#8795a8">
+                  No historical records are connected to this page yet.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel-content">
+          <p class="note">
+            This is the separate Event Log page layout. Your current live
+            violation table is still available on Live Monitor. To show
+            the same events here, we need to connect this page to the
+            JavaScript event data or a backend endpoint.
+          </p>
+          <a class="btn btn-primary" href="index.html#violations">
+            View current violations
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">CitizenRadar v1.0 · Traffic Event Management</footer>
+  </div>
+</body>
+</html>

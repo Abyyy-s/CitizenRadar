@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <!-- Core OpenCvSharp4 library (includes DNN module for ONNX inference) -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.20.1" />
     <PackageReference Include="OpenCvSharp4" Version="4.10.0.20241108" />
 
     <!-- Native runtime binaries — Windows and Linux x64 with full VideoIO, HighGUI, and DNN support -->

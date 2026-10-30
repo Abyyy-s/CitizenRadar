@@ -1,233 +1,399 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CitizenRadar — AI Traffic Watchdog</title>
+  <title>CitizenRadar | Live Monitor</title>
   <link rel="stylesheet" href="app.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Header -->
-  <header class="app-header">
-    <div class="brand">
-      <div class="radar-icon">
-        <span class="pulse-ring"></span>
-        <span class="pulse-ring delay"></span>
-        <span class="core-dot"></span>
-      </div>
-      <div>
-        <h1 class="brand-title">CitizenRadar</h1>
-        <p class="brand-subtitle">Monocular Vision Speed Watchdog • .NET 8 + OpenCV DNN</p>
-      </div>
-    </div>
+  <aside class="app-sidebar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark"><span></span><i></i></span>
+      <span class="brand-copy">
+        <strong>Citizen<span>Radar</span></strong>
+        <small>Traffic Monitoring</small>
+      </span>
+    </a>
 
-    <div class="header-status">
-      <div class="status-pill active" id="status-pill">
-        <span class="status-dot"></span>
-        <span id="status-label">RADAR ACTIVE</span>
-      </div>
-      <div class="fps-badge">
-        <span id="stat-fps">30.0</span> FPS
-      </div>
-      <div class="clock" id="live-clock">12:00:00</div>
-    </div>
-  </header>
+    <nav class="side-nav">
+      <a class="nav-item active" href="index.html">
+        <span class="nav-icon">▣</span><span>Live Monitor</span>
+      </a>
+      <a class="nav-item" href="analytics.html">
+        <span class="nav-icon">▥</span><span>Analytics</span>
+      </a>
+      <a class="nav-item" href="events.html">
+        <span class="nav-icon">▤</span><span>Event Log</span>
+      </a>
+      <a class="nav-item" href="calibration.html">
+        <span class="nav-icon">⌖</span><span>Road Calibration</span>
+      </a>
+      <a class="nav-item" href="settings.html">
+        <span class="nav-icon">⚙</span><span>System Settings</span>
+      </a>
+    </nav>
 
-  <!-- Source Controls Bar -->
-  <div class="source-bar">
-    <div class="source-bar-left">
-      <div class="source-mode-indicator" id="source-mode">
-        <span class="source-icon" id="source-icon">📁</span>
-        <span class="source-label" id="source-label">data/traffic.mp4</span>
+    <div class="sidebar-bottom">
+      <div class="road-art" aria-hidden="true">
+        <span></span><span></span><span></span>
       </div>
+      <p>Safer roads.<br><strong>Stronger communities.</strong></p>
+      <span class="sidebar-rule"></span>
+      <small>TRAFFIC SAFETY SYSTEM</small>
     </div>
-    <div class="source-bar-right">
-      <button id="btn-upload" class="btn btn-source">
-        <span class="btn-icon">📤</span>
-        Upload Video
-      </button>
-      <input type="file" id="file-input" accept=".mp4,.avi,.mkv,.mov,.webm" style="display:none">
-      <button id="btn-go-live" class="btn btn-live">
-        <span class="live-dot-btn"></span>
-        Go Live
-      </button>
-    </div>
-  </div>
+  </aside>
 
-  <!-- Calibration Warning Banner (shown when source changes) -->
-  <div class="calib-warning-banner" id="calib-warning-banner" style="display:none;">
-    <span class="calib-warning-icon">⚠️</span>
-    <span class="calib-warning-text">
-      <strong>New video source detected.</strong> Road calibration may be inaccurate for this camera angle.
-      Click <em>"Calibrate Road Points"</em> and enter road dimensions for accurate speed readings.
-    </span>
-    <button class="btn btn-ghost calib-warning-dismiss" id="calib-warning-dismiss">✕</button>
-  </div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="page-heading">
+        <p class="eyebrow">CITIZENRADAR / MONITORING</p>
+        <h1>Traffic Operations Centre</h1>
+        <p>Real-time vehicle monitoring and speed enforcement</p>
+      </div>
 
-  <!-- Main Dashboard Layout -->
-  <main class="dashboard-grid">
-    <!-- Left Column: Video & Calibration -->
-    <section class="viewport-section">
-      <div class="card video-card">
-        <div class="card-header">
-          <div class="card-title-group">
-            <span class="icon">📹</span>
-            <h2>Live Camera Feed & Spatial Tracking</h2>
+      <div class="topbar-actions">
+        <div class="source-control">
+          <label>Video source</label>
+          <div class="source-mode-indicator" id="source-mode">
+            <span class="source-icon" id="source-icon">▣</span>
+            <span class="source-label" id="source-label">data/traffic.mp4</span>
           </div>
-          <div class="controls-group">
-            <button id="btn-toggle-calib" class="btn btn-secondary">
-              <span class="btn-icon">📐</span>
-              <span id="btn-calib-text">Calibrate Road Points</span>
+        </div>
+
+        <button id="btn-upload" class="btn btn-outline" type="button">
+          ↥ Upload video
+        </button>
+        <input type="file" id="file-input"
+               accept=".mp4,.avi,.mkv,.mov,.webm" hidden>
+
+        <button id="btn-go-live" class="btn btn-primary" type="button">
+          <span class="live-dot-btn"></span> Go live
+        </button>
+
+        <div class="system-state">
+          <span class="state-dot"></span>
+          <span>
+            <strong id="status-label">System active</strong>
+            <small>YOLOv8 · OpenCV DNN</small>
+          </span>
+        </div>
+
+        <div class="clock-block">
+          <strong id="live-clock">--:--:--</strong>
+          <small>Local time</small>
+        </div>
+      </div>
+
+      <div class="status-pill active" id="status-pill" aria-hidden="true">
+        <span class="status-dot"></span>System active
+      </div>
+    </header>
+
+    <div class="calib-warning-banner" id="calib-warning-banner"
+         style="display:none;">
+      <span class="calib-warning-icon">!</span>
+      <span class="calib-warning-text">
+        <strong>Video source changed.</strong>
+        Road calibration may be inaccurate for this camera angle.
+      </span>
+      <button class="btn btn-ghost" id="calib-warning-dismiss"
+              type="button">×</button>
+    </div>
+
+    <main class="dashboard-grid">
+      <section class="main-column" id="monitor">
+        <section class="card video-card">
+          <div class="card-header video-header">
+            <div class="card-title-group">
+              <span class="feed-state-dot"></span>
+              <div>
+                <h2>Live Traffic Feed</h2>
+                <p>Vehicle detection and tracking (YOLOv8)</p>
+              </div>
+            </div>
+
+            <div class="controls-group">
+              <span class="feed-chip">
+                <span class="feed-chip-dot"></span>LIVE FEED
+              </span>
+              <button id="btn-toggle-calib" class="btn btn-secondary"
+                      type="button">
+                ⌖ <span id="btn-calib-text">Calibrate road points</span>
+              </button>
+              <button id="btn-reset-calib" class="btn btn-ghost"
+                      type="button" style="display:none;">
+                Reset points
+              </button>
+            </div>
+          </div>
+
+          <div class="video-container" id="video-wrapper">
+            <img id="live-stream" src="/api/stream"
+                 alt="Live traffic camera stream">
+            <canvas id="calibration-canvas"></canvas>
+
+            <div class="drop-overlay" id="drop-overlay">
+              <div class="drop-overlay-content">
+                <span class="drop-icon">↑</span>
+                <span class="drop-text">Drop video file here</span>
+                <small>MP4, AVI, MKV, MOV or WEBM</small>
+              </div>
+            </div>
+
+            <div class="live-badge" id="live-badge" style="display:none;">
+              <span class="live-rec-dot"></span> LIVE
+            </div>
+
+            <div id="calibration-banner"
+                 class="calibration-overlay-banner" style="display:none;">
+              <div class="step-guide">
+                <span class="badge" id="calib-step-num">Step 1</span>
+                <span id="calib-instruction">
+                  Click Top-Left corner of the road
+                </span>
+              </div>
+              <div class="points-progress">
+                <span class="pt-indicator" id="pt-ind-1">P1</span>
+                <span class="pt-indicator" id="pt-ind-2">P2</span>
+                <span class="pt-indicator" id="pt-ind-3">P3</span>
+                <span class="pt-indicator" id="pt-ind-4">P4</span>
+              </div>
+            </div>
+
+            <div class="video-corner-label">
+              CAM 01 · VEHICLE ANALYSIS
+            </div>
+          </div>
+
+          <div class="video-caption">
+            <span class="caption-dot"></span>
+            <span>Stream processing</span>
+            <span class="caption-spacer"></span>
+            <span>YOLOv8 · OpenCV DNN</span>
+          </div>
+
+          <div id="calibration-controls" class="calibration-form"
+               style="display:none;">
+            <div class="form-intro">
+              <strong>Road geometry</strong>
+              <small>Enter real-world dimensions to calculate speed.</small>
+            </div>
+            <div class="form-group">
+              <label for="input-road-width">Road width (m)</label>
+              <input type="number" id="input-road-width"
+                     value="10.0" step="0.5" min="2" max="50">
+            </div>
+            <div class="form-group">
+              <label for="input-road-length">Road length (m)</label>
+              <input type="number" id="input-road-length"
+                     value="50.0" step="1" min="5" max="200">
+            </div>
+            <button id="btn-save-calib" class="btn btn-primary"
+                    type="button" disabled>
+              Save road geometry
             </button>
-            <button id="btn-reset-calib" class="btn btn-ghost" style="display: none;">
-              Reset Points
-            </button>
           </div>
-        </div>
+        </section>
 
-        <div class="video-container" id="video-wrapper">
-          <img id="live-stream" src="/api/stream" alt="Live Camera Feed" />
-          <canvas id="calibration-canvas"></canvas>
+        <section class="metrics-section" id="overview">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">AT A GLANCE</p>
+              <h2>Traffic overview</h2>
+            </div>
+            <span class="updated-label">● LIVE METRICS</span>
+          </div>
 
-          <!-- Drag-and-drop overlay -->
-          <div class="drop-overlay" id="drop-overlay">
-            <div class="drop-overlay-content">
-              <span class="drop-icon">📥</span>
-              <span class="drop-text">Drop video file here</span>
+          <div class="metrics-grid">
+            <div class="metric-card metric-green">
+              <div class="metric-top">
+                <span class="metric-label">Active tracks</span>
+                <span class="metric-symbol">↗</span>
+              </div>
+              <div class="metric-value" id="stat-active">0</div>
+              <div class="metric-foot">Currently tracked</div>
+            </div>
+
+            <div class="metric-card metric-blue">
+              <div class="metric-top">
+                <span class="metric-label">Vehicles observed</span>
+                <span class="metric-symbol">▤</span>
+              </div>
+              <div class="metric-value" id="stat-total">0</div>
+              <div class="metric-foot">Total detections</div>
+            </div>
+
+            <div class="metric-card metric-amber">
+              <div class="metric-top">
+                <span class="metric-label">Average speed</span>
+                <span class="metric-symbol">↔</span>
+              </div>
+              <div class="metric-value" id="stat-avg">
+                0.0 <span class="unit">km/h</span>
+              </div>
+              <div class="metric-foot">Measured vehicles</div>
+            </div>
+
+            <div class="metric-card metric-red">
+              <div class="metric-top">
+                <span class="metric-label">Violations</span>
+                <span class="metric-symbol">!</span>
+              </div>
+              <div class="metric-value" id="stat-violations">
+                0 <span class="sub" id="stat-violation-pct">(0%)</span>
+              </div>
+              <div class="metric-foot">Above speed threshold</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card violations-card" id="violations">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="alert-mark">!</span>
+              <div>
+                <h2>Recent violations</h2>
+                <p>Vehicles exceeding the configured speed limit</p>
+              </div>
+            </div>
+            <a class="live-tag" href="events.html">VIEW ALL EVENTS →</a>
+          </div>
+
+          <div class="table-container">
+            <table class="violations-table">
+              <thead>
+                <tr>
+                  <th>Time</th><th>Vehicle ID</th><th>Class</th>
+                  <th>Speed</th><th>Limit</th><th>Excess</th>
+                </tr>
+              </thead>
+              <tbody id="violations-tbody">
+                <tr class="empty-row">
+                  <td colspan="6">No violations recorded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <aside class="sidebar-section">
+        <section class="card speed-limit-card">
+          <div class="card-header compact-header">
+            <div class="card-title-group">
+              <span class="section-mark blue-mark"></span>
+              <div>
+                <h2>Speed limit control</h2>
+                <p>Set the maximum allowed speed</p>
+              </div>
             </div>
           </div>
 
-          <!-- Live mode badge -->
-          <div class="live-badge" id="live-badge" style="display:none;">
-            <span class="live-rec-dot"></span>
-            LIVE
-          </div>
-
-          <!-- Interactive Calibration Banner (hidden by default) -->
-          <div id="calibration-banner" class="calibration-overlay-banner" style="display: none;">
-            <div class="step-guide">
-              <span class="badge" id="calib-step-num">Step 1</span>
-              <span id="calib-instruction">Click <strong>Top-Left</strong> corner of the road</span>
+          <div class="speed-layout">
+            <div class="speed-limit-summary">
+              <div class="speed-gauge">
+                <div class="gauge-inner">
+                  <span class="speed-sign-inner" id="display-limit">40</span>
+                  <span class="speed-sign-unit">km/h</span>
+                </div>
+              </div>
+              <div class="limit-description">
+                <span class="limit-label">Current limit</span>
+                <strong><span id="limit-summary-value">40</span> km/h</strong>
+                <span class="limit-help">Vehicles above this speed are flagged.</span>
+              </div>
             </div>
-            <div class="points-progress">
-              <span class="pt-indicator" id="pt-ind-1">P1</span>
-              <span class="pt-indicator" id="pt-ind-2">P2</span>
-              <span class="pt-indicator" id="pt-ind-3">P3</span>
-              <span class="pt-indicator" id="pt-ind-4">P4</span>
+
+            <div class="preset-buttons">
+              <button class="preset-btn" data-speed="25" type="button">25 <span>School</span></button>
+              <button class="preset-btn" data-speed="30" type="button">30 <span>Local</span></button>
+              <button class="preset-btn active" data-speed="40" type="button">40 <span>Urban</span></button>
+              <button class="preset-btn" data-speed="60" type="button">60 <span>Main road</span></button>
             </div>
           </div>
-        </div>
 
-        <!-- Calibration Dimension Inputs (shown during calibration) -->
-        <div id="calibration-controls" class="calibration-form" style="display: none;">
-          <div class="form-group">
-            <label for="input-road-width">Road Width (m):</label>
-            <input type="number" id="input-road-width" value="10.0" step="0.5" min="2" max="50">
-          </div>
-          <div class="form-group">
-            <label for="input-road-length">Road Depth / Length (m):</label>
-            <input type="number" id="input-road-length" value="50.0" step="1.0" min="5" max="200">
-          </div>
-          <button id="btn-save-calib" class="btn btn-primary" disabled>
-            Save Road Geometry & Apply
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Right Column: Watchdog Analytics & Violation Log -->
-    <section class="sidebar-section">
-      <!-- Speed Limit Control -->
-      <div class="card speed-limit-card">
-        <div class="card-header">
-          <span class="icon">⚠️</span>
-          <h2>Speed Limit Watchdog</h2>
-        </div>
-        <div class="speed-limit-body">
-          <div class="speed-sign">
-            <span class="speed-sign-inner" id="display-limit">40</span>
-            <span class="speed-sign-unit">km/h</span>
-          </div>
-          <div class="preset-buttons">
-            <button class="preset-btn" data-speed="25">25 (School)</button>
-            <button class="preset-btn" data-speed="30">30 (Neighborhood)</button>
-            <button class="preset-btn active" data-speed="40">40 (Urban)</button>
-            <button class="preset-btn" data-speed="60">60 (Avenue)</button>
-          </div>
           <div class="slider-row">
-            <input type="range" id="slider-speed-limit" min="15" max="100" value="40" step="5">
+            <input type="range" id="slider-speed-limit"
+                   min="15" max="100" value="40" step="5">
+            <div class="range-labels">
+              <span>15 km/h</span><span>100 km/h</span>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- Real-Time Metrics Cards -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-icon">🚗</div>
-          <div class="metric-label">Active Tracks</div>
-          <div class="metric-value" id="stat-active">0</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-icon">📈</div>
-          <div class="metric-label">Total Observed</div>
-          <div class="metric-value" id="stat-total">0</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-icon">⚡</div>
-          <div class="metric-label">Avg Speed</div>
-          <div class="metric-value" id="stat-avg">0.0 <span class="unit">km/h</span></div>
-        </div>
-        <div class="metric-card violation-highlight">
-          <div class="metric-icon">🚨</div>
-          <div class="metric-label">Violations</div>
-          <div class="metric-value" id="stat-violations">0 <span class="sub" id="stat-violation-pct">(0%)</span></div>
-        </div>
-      </div>
+        <section class="card road-card">
+          <div class="card-header compact-header">
+            <div class="card-title-group">
+              <span class="section-mark blue-mark"></span>
+              <div>
+                <h2>Road calibration</h2>
+                <p>Define the road plane for speed estimation</p>
+              </div>
+            </div>
+          </div>
+          <div class="calibration-summary">
+            <div class="calibration-preview" aria-hidden="true">
+              <div class="preview-road">
+                <span class="road-line"></span>
+                <i class="point p1"></i><i class="point p2"></i>
+                <i class="point p3"></i><i class="point p4"></i>
+              </div>
+            </div>
+            <div class="calibration-actions">
+              <a class="btn btn-primary btn-full" href="calibration.html">
+                ⌖ Calibrate road points
+              </a>
+              <button class="btn btn-outline btn-full"
+                      type="button" id="sidebar-reset-calib">
+                ↻ Reset points
+              </button>
+            </div>
+          </div>
+          <p class="calibration-note">
+            Choose four road corners on the camera feed, then save the geometry.
+          </p>
+        </section>
 
-      <!-- Live Violations Log -->
-      <div class="card violations-card">
-        <div class="card-header">
-          <span class="icon">📋</span>
-          <h2>Live Violation Watchdog Log</h2>
-          <span class="live-tag">LIVE FEED</span>
-        </div>
-        <div class="table-container">
-          <table class="violations-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>ID</th>
-                <th>Class</th>
-                <th>Speed</th>
-                <th>Delta</th>
-              </tr>
-            </thead>
-            <tbody id="violations-tbody">
-              <tr class="empty-row">
-                <td colspan="5">Listening for speed limit violations...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
+        <section class="card system-card">
+          <div class="card-header compact-header">
+            <div class="card-title-group">
+              <span class="section-mark blue-mark"></span>
+              <div>
+                <h2>System information</h2>
+                <p>Detection pipeline status</p>
+              </div>
+            </div>
+          </div>
+          <dl class="system-list">
+            <div><dt>Detection model</dt><dd>YOLOv8</dd></div>
+            <div><dt>Vision engine</dt><dd>OpenCV DNN</dd></div>
+            <div><dt>Application</dt><dd>.NET 8</dd></div>
+            <div><dt>Video mode</dt><dd id="footer-source">File mode</dd></div>
+            <div><dt>Status</dt><dd class="running"><span></span> Running</dd></div>
+            <div><dt>Processing FPS</dt><dd><span id="stat-fps">3.4</span> FPS</dd></div>
+          </dl>
+        </section>
+      </aside>
+    </main>
 
-  <!-- Footer -->
-  <footer class="app-footer">
-    <span>CitizenRadar v1.0</span>
-    <span class="footer-sep">•</span>
-    <span>.NET 8 + YOLOv8 + OpenCV DNN</span>
-    <span class="footer-sep">•</span>
-    <span id="footer-source">File Mode</span>
-  </footer>
+    <footer class="app-footer">
+      <span>CitizenRadar <strong>v1.0</strong></span>
+      <span class="footer-sep">/</span>
+      <span>.NET 8 · YOLOv8 · OpenCV DNN</span>
+      <span class="footer-spacer"></span>
+      <span>Traffic monitoring prototype</span>
+    </footer>
 
-  <!-- Toast Container -->
-  <div class="toast-container" id="toast-container"></div>
+    <div class="toast-container" id="toast-container"></div>
+  </div>
 
   <script src="app.js"></script>
+  <script>
+    document.getElementById('sidebar-reset-calib')?.addEventListener('click', () => {
+      document.getElementById('btn-reset-calib')?.click();
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CitizenRadar | System Settings</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <aside class="app-sidebar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark"><span></span><i></i></span>
+      <span class="brand-copy">
+        <strong>Citizen<span>Radar</span></strong>
+        <small>Traffic Monitoring</small>
+      </span>
+    </a>
+
+    <nav class="side-nav">
+      <a class="nav-item" href="index.html"><span class="nav-icon">▣</span><span>Live Monitor</span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon">▥</span><span>Analytics</span></a>
+      <a class="nav-item" href="events.html"><span class="nav-icon">▤</span><span>Event Log</span></a>
+      <a class="nav-item" href="calibration.html"><span class="nav-icon">⌖</span><span>Road Calibration</span></a>
+      <a class="nav-item active" href="settings.html"><span class="nav-icon">⚙</span><span>System Settings</span></a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="road-art"><span></span><span></span><span></span></div>
+      <p>Safer roads.<br><strong>Stronger communities.</strong></p>
+      <span class="sidebar-rule"></span>
+      <small>TRAFFIC SAFETY SYSTEM</small>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="page-heading">
+        <p class="eyebrow">CITIZENRADAR / SETTINGS</p>
+        <h1>System Settings</h1>
+        <p>Application and detection pipeline information</p>
+      </div>
+      <a class="btn btn-outline" href="index.html">← Live Monitor</a>
+    </header>
+
+    <main class="page-body">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Detection pipeline</h2>
+            <p>Current application configuration</p>
+          </div>
+          <span class="status-good">● Configured</span>
+        </div>
+
+        <div class="panel-content">
+          <div class="field">
+            <label for="model-name">Detection model</label>
+            <input id="model-name" type="text" value="YOLOv8 ONNX" readonly>
+          </div>
+
+          <div class="field">
+            <label for="vision-engine">Vision engine</label>
+            <input id="vision-engine" type="text" value="OpenCV DNN" readonly>
+          </div>
+
+          <div class="field">
+            <label for="runtime">Application runtime</label>
+            <input id="runtime" type="text" value=".NET 8" readonly>
+          </div>
+
+          <div class="field">
+            <label for="stream-endpoint">Video stream endpoint</label>
+            <input id="stream-endpoint" type="text" value="/api/stream" readonly>
+          </div>
+
+          <p class="note">
+            These fields show the current setup. They are read-only and
+            do not change your backend configuration.
+          </p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Monitoring controls</h2>
+            <p>Open the page where these controls are available</p>
+          </div>
+        </div>
+
+        <div class="panel-content">
+          <p>Video source selection and speed-limit controls</p>
+          <a class="btn btn-primary" href="index.html">
+            Open Live Monitor
+          </a>
+
+          <hr style="border:0;border-top:1px solid #e3e9f1;margin:20px 0">
+
+          <p>Road dimensions and four-point calibration</p>
+          <a class="btn btn-outline" href="calibration.html">
+            Road Calibration
+          </a>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>System status</h2>
+            <p>Technology used in CitizenRadar</p>
+          </div>
+        </div>
+        <div class="panel-content">
+          <p><strong>Backend:</strong> .NET 8</p>
+          <p><strong>Object detection:</strong> YOLOv8 ONNX</p>
+          <p><strong>Computer vision:</strong> OpenCV DNN</p>
+          <p><strong>Stream:</strong> <code>/api/stream</code></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">CitizenRadar v1.0 · System Configuration</footer>
+  </div>
+</body>
+</html>

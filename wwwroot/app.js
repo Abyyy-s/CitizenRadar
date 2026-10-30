@@ -118,7 +118,13 @@ btnToggleCalib.addEventListener("click", () => {
     btnResetCalib.style.display = "inline-block";
     calibBanner.style.display = "flex";
     calibControls.style.display = "flex";
-    calibCanvas.classList.add("active");
+    // FIX 1: Add 'calibrating' to the video-container div, not 'active' to the canvas.
+    // The CSS rule '.video-container.calibrating #calibration-canvas' sets
+    // pointer-events: auto and cursor: crosshair on the canvas.
+    videoWrapper.classList.add("calibrating");
+    console.log("Calibration active:", isCalibrating);
+    console.log("Canvas pointer events:", getComputedStyle(calibCanvas).pointerEvents);
+    console.log("Video wrapper classes:", videoWrapper.className);
     calibrationPoints = [];
     updateStepGuide();
     syncCanvasSize();
@@ -140,21 +146,27 @@ function resetCalibrationUI() {
   btnResetCalib.style.display = "none";
   calibBanner.style.display = "none";
   calibControls.style.display = "none";
-  calibCanvas.classList.remove("active");
+  videoWrapper.classList.remove("calibrating"); // FIX 1 (matching remove)
   calibrationPoints = [];
   ctx.clearRect(0, 0, calibCanvas.width, calibCanvas.height);
 }
 
 calibCanvas.addEventListener("click", (e) => {
+  console.log("CANVAS CLICK RECEIVED", e.clientX, e.clientY);
   if (!isCalibrating || calibrationPoints.length >= 4) return;
 
   const rect = calibCanvas.getBoundingClientRect();
   const clickX = e.clientX - rect.left;
   const clickY = e.clientY - rect.top;
 
-  // Normalized to original video resolution (960x540)
-  const normX = (clickX / rect.width) * 960.0;
-  const normY = (clickY / rect.height) * 540.0;
+  // FIX 2: Use the stream's actual frame dimensions rather than hardcoded
+  // 960×540.  liveImg.naturalWidth/naturalHeight reflect the real resolution
+  // of whatever video is currently streaming (traffic.mp4 is 960×540, but
+  // an uploaded video may differ).  Fall back to 960×540 if not yet loaded.
+  const videoW = liveImg.naturalWidth  || 960;
+  const videoH = liveImg.naturalHeight || 540;
+  const normX = (clickX / rect.width)  * videoW;
+  const normY = (clickY / rect.height) * videoH;
 
   calibrationPoints.push({
     canvasX: clickX,

@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CitizenRadar | Road Calibration</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <aside class="app-sidebar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark"><span></span><i></i></span>
+      <span class="brand-copy">
+        <strong>Citizen<span>Radar</span></strong>
+        <small>Traffic Monitoring</small>
+      </span>
+    </a>
+
+    <nav class="side-nav">
+      <a class="nav-item" href="index.html"><span class="nav-icon">▣</span><span>Live Monitor</span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon">▥</span><span>Analytics</span></a>
+      <a class="nav-item" href="events.html"><span class="nav-icon">▤</span><span>Event Log</span></a>
+      <a class="nav-item active" href="calibration.html"><span class="nav-icon">⌖</span><span>Road Calibration</span></a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙</span><span>System Settings</span></a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="road-art"><span></span><span></span><span></span></div>
+      <p>Safer roads.<br><strong>Stronger communities.</strong></p>
+      <span class="sidebar-rule"></span>
+      <small>TRAFFIC SAFETY SYSTEM</small>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="page-heading">
+        <p class="eyebrow">CITIZENRADAR / CALIBRATION</p>
+        <h1>Road Calibration</h1>
+        <p>Configure road geometry for speed estimation</p>
+      </div>
+      <a class="btn btn-outline" href="index.html">← Live Monitor</a>
+    </header>
+
+    <main class="page-body">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Calibrate camera view</h2>
+            <p>Define four road corners using your video feed</p>
+          </div>
+        </div>
+
+        <div class="panel-content">
+          <div class="calibration-preview" style="height:220px;margin-bottom:18px">
+            <div class="preview-road">
+              <span class="road-line"></span>
+              <i class="point p1"></i>
+              <i class="point p2"></i>
+              <i class="point p3"></i>
+              <i class="point p4"></i>
+            </div>
+          </div>
+
+          <h3>Calibration steps</h3>
+          <p>1. Open the Live Monitor.</p>
+          <p>2. Click <strong>Calibrate road points</strong>.</p>
+          <p>3. Select the four corners of the road on the video feed.</p>
+          <p>4. Enter the real road width and length.</p>
+          <p>5. Save the calibration and check the speed measurements.</p>
+
+          <a class="btn btn-primary" href="index.html">
+            Open Live Monitor &amp; Calibrate
+          </a>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Road dimensions</h2>
+            <p>Reference information</p>
+          </div>
+        </div>
+        <div class="panel-content">
+          <p class="note">
+            Enter measurements in metres on the Live Monitor calibration
+            panel. Use real-world dimensions for the selected road section.
+            Incorrect dimensions can make speed estimates inaccurate.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">CitizenRadar v1.0 · Road Geometry</footer>
+  </div>
+</body>
+</html>

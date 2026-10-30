@@ -3,6 +3,29 @@ using CitizenRadar;
 using CitizenRadar.Core;
 using CitizenRadar.Web;
 
+// ── CUDA Dependency Setup ─────────────────────────────────────────────────────
+// ONNX Runtime's CUDA execution provider (onnxruntime_providers_cuda.dll) needs
+// cudart64_12.dll, cudnn64_9.dll, cublas64_12.dll, etc. on the PATH.
+// There is no system-wide CUDA toolkit installed.  The required CUDA 12 + cuDNN 9
+// DLLs are present in the PyTorch installation's torch\lib directory.
+// We prepend that folder to the in-process PATH before any ORT session is created.
+// This does NOT change any system or user environment variable permanently.
+var torchCudaBin = @"C:\Users\abrah\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\lib";
+if (Directory.Exists(torchCudaBin))
+{
+    Environment.SetEnvironmentVariable(
+        "PATH",
+        torchCudaBin + ";" + Environment.GetEnvironmentVariable("PATH"));
+    Console.WriteLine($"[CUDA Setup] Prepended to PATH: {torchCudaBin}");
+}
+else
+{
+    Console.Error.WriteLine($"[CUDA Setup] WARNING: PyTorch torch\\lib not found at '{torchCudaBin}'.");
+    Console.Error.WriteLine("             ONNX Runtime CUDA provider will likely fail to load its dependencies.");
+    Console.Error.WriteLine("             Update 'torchCudaBin' in Program.cs to match your installation.");
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 500 * 1024 * 1024);
 

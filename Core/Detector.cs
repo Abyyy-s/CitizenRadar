@@ -1,228 +1,237 @@
+
 using OpenCvSharp;
 using OpenCvSharp.Dnn;
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
 using CitizenRadar.Models;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CitizenRadar.Core;
 
 /// <summary>
-/// Runs YOLOv8n ONNX inference via the OpenCV DNN module and returns
-/// filtered vehicle detections.
-///
-/// Inference path: C# → OpenCvSharp4 → OpenCV DNN → yolov8n.onnx
-///
-/// ┌──────────────────────────────────────────────────────────────────┐
-/// │ IMPORTANT: ONNX OUTPUT SHAPE VERIFICATION                       │
-/// │                                                                  │
-/// │ The post-processing code below is written for the standard       │
-/// │ YOLOv8n ONNX export produced by:                                 │
-/// │   yolo export model=yolov8n.pt format=onnx imgsz=640             │
-/// │                                                                  │
-/// │ Expected output tensor shape: [1, 84, 8400]                      │
-/// │   - 84 = 4 (cx, cy, w, h) + 80 (COCO class scores)              │
-/// │   - 8400 = number of anchor predictions                          │
-/// │                                                                  │
-/// │ This must be VERIFIED against the actual exported model before    │
-/// │ relying on these assumptions. To verify:                         │
-/// │                                                                  │
-/// │ 1. Load the model and run a forward pass on a test image         │
-/// │ 2. Print output.Size(0), output.Size(1), output.Size(2)         │
-/// │ 3. Confirm the shape matches [1, 84, 8400]                      │
-/// │ 4. Confirm bbox format is [cx, cy, w, h] (center format)        │
-/// │ 5. Confirm class scores are in rows 4–83 (no separate           │
-/// │    objectness score — YOLOv8 uses max class score directly)     │
-/// │ 6. Confirm NMS is NOT built into the ONNX export                │
-/// │                                                                  │
-/// │ If the shape differs, update the parsing code accordingly.       │
-/// └──────────────────────────────────────────────────────────────────┘
+/// Runs YOLOv8n ONNX inference using ONNX Runtime CUDA.
 /// </summary>
 public class Detector : IDisposable
 {
-    private readonly Net _net;
+    private readonly InferenceSession _session;
+    private readonly string _inputName;
     private readonly int _inputSize;
     private bool _shapeVerified;
+    private bool _disposed;
 
-    /// <summary>
-    /// Loads the YOLOv8n ONNX model via OpenCV DNN.
-    /// </summary>
-    /// <param name="onnxModelPath">Path to the yolov8n.onnx file.</param>
-    /// <param name="inputSize">Input image size (default 640).</param>
     public Detector(string onnxModelPath, int inputSize = 640)
     {
         if (!File.Exists(onnxModelPath))
-            throw new FileNotFoundException($"ONNX model not found: {onnxModelPath}");
+        {
+            throw new FileNotFoundException(
+                $"ONNX model not found: {onnxModelPath}");
+        }
 
-        _net = CvDnn.ReadNetFromOnnx(onnxModelPath)
-            ?? throw new InvalidOperationException($"Failed to load ONNX model via OpenCV DNN: {onnxModelPath}");
         _inputSize = inputSize;
         _shapeVerified = false;
 
-        Console.WriteLine($"Detector: Loaded model from {onnxModelPath}");
+        Console.WriteLine(
+            "Detector: Initialising CUDA execution provider on device 0...");
+
+        using var sessionOptions =
+            new Microsoft.ML.OnnxRuntime.SessionOptions();
+
+        sessionOptions.GraphOptimizationLevel =
+            GraphOptimizationLevel.ORT_ENABLE_ALL;
+
+        using (var cudaOptions = new OrtCUDAProviderOptions())
+        {
+            cudaOptions.UpdateOptions(
+                new Dictionary<string, string>
+                {
+                    ["device_id"] = "0"
+                });
+
+            try
+            {
+                sessionOptions.AppendExecutionProvider_CUDA(cudaOptions);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    $"Detector: CUDA initialisation failed: {ex.Message}");
+
+                throw new InvalidOperationException(
+                    "ONNX Runtime CUDA provider failed to initialise.", ex);
+            }
+        }
+
+        _session = new InferenceSession(onnxModelPath, sessionOptions);
+        _inputName = _session.InputMetadata.Keys.First();
+
+        Console.WriteLine("Detector: CUDA provider configured.");
+        Console.WriteLine($"Detector: Input name = '{_inputName}'");
+        Console.WriteLine($"Detector: Input size = {_inputSize} x {_inputSize}");
+        Console.WriteLine($"Detector: Model loaded from '{onnxModelPath}'");
     }
 
-    /// <summary>
-    /// Runs inference on a single frame and returns vehicle detections only.
-    /// Applies confidence thresholding, NMS, and vehicle class filtering.
-    /// </summary>
     public List<Detection> Detect(Mat frame)
     {
         int originalWidth = frame.Width;
         int originalHeight = frame.Height;
 
-        // ── Preprocessing ─────────────────────────────────────────────
-        // Create a blob: resize to 640×640, normalize to [0,1], swap R↔B
-        var blob = CvDnn.BlobFromImage(
+        using var blob = CvDnn.BlobFromImage(
             frame,
             scaleFactor: 1.0 / 255.0,
             size: new Size(_inputSize, _inputSize),
             mean: new Scalar(0, 0, 0),
             swapRB: true,
-            crop: false
-        );
+            crop: false);
 
-        _net.SetInput(blob);
+        int totalElements = 3 * _inputSize * _inputSize;
+        var inputData = new float[totalElements];
 
-        // ── Forward pass ──────────────────────────────────────────────
-        var output = _net.Forward();
+        Marshal.Copy(blob.Data, inputData, 0, totalElements);
 
-        // ── Shape verification (first frame only) ─────────────────────
+        var inputTensor = new DenseTensor<float>(
+            inputData,
+            new[] { 1, 3, _inputSize, _inputSize });
+
+        var ortInputs = new List<NamedOnnxValue>
+        {
+            NamedOnnxValue.CreateFromTensor(_inputName, inputTensor)
+        };
+
+        using var outputCollection = RunInference(ortInputs);
+
+        var firstOutput = outputCollection.First();
+        var outputTensor = firstOutput.AsTensor<float>();
+
         if (!_shapeVerified)
         {
-            VerifyOutputShape(output);
+            Console.WriteLine(
+                $"Detector: Output shape = [{string.Join(" x ", outputTensor.Dimensions.ToArray())}]");
+
             _shapeVerified = true;
         }
 
-        // ── Post-processing ───────────────────────────────────────────
-        var detections = ParseOutput(output, originalWidth, originalHeight);
+        float[] outputData = outputTensor.ToArray();
 
-        blob.Dispose();
-        output.Dispose();
+        int numAttributes = outputTensor.Dimensions[1];
+        int numPredictions = outputTensor.Dimensions[2];
 
-        return detections;
+        return ParseOutput(
+            outputData,
+            numAttributes,
+            numPredictions,
+            originalWidth,
+            originalHeight,
+            _inputSize);
     }
 
-    /// <summary>
-    /// Verifies the ONNX output tensor shape and logs it for documentation.
-    /// Called once on the first frame.
-    /// </summary>
-    private void VerifyOutputShape(Mat output)
+    private IDisposableReadOnlyCollection<DisposableNamedOnnxValue>
+        RunInference(IReadOnlyCollection<NamedOnnxValue> inputs)
     {
-        int dims = output.Dims;
-        var shapeStr = string.Join(" × ", Enumerable.Range(0, dims).Select(i => output.Size(i)));
-        Console.WriteLine($"Detector: ONNX output shape = [{shapeStr}]");
+        var stopwatch = Stopwatch.StartNew();
 
-        // Expected: [1, 84, 8400] for YOLOv8n with 80 COCO classes at 640×640
-        if (dims == 3 && output.Size(1) == 84)
+        try
         {
-            Console.WriteLine("Detector: Shape matches expected YOLOv8 format [1, 84, N].");
+            return _session.Run(inputs);
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("WARNING: Output shape does not match expected [1, 84, 8400].");
-            Console.WriteLine("         The post-processing code may need adjustment.");
+            Console.Error.WriteLine(
+                $"Detector: ORT inference failed: {ex.Message}");
+
+            throw;
+        }
+        finally
+        {
+            stopwatch.Stop();
+
+            Console.WriteLine(
+                $"Inference time: {stopwatch.Elapsed.TotalMilliseconds:F1} ms");
         }
     }
 
-    /// <summary>
-    /// Parses the raw YOLOv8 output tensor into a list of vehicle detections.
-    ///
-    /// YOLOv8 output format (after export with default settings):
-    ///   Shape: [1, 84, N]  where N = number of predictions (typically 8400)
-    ///   Row 0: cx  (center x, normalised to input size)
-    ///   Row 1: cy  (center y, normalised to input size)
-    ///   Row 2: w   (width, normalised to input size)
-    ///   Row 3: h   (height, normalised to input size)
-    ///   Rows 4–83: class confidence scores for 80 COCO classes
-    ///
-    /// No separate objectness score — confidence = max(class scores).
-    /// NMS is NOT included in the ONNX export and must be applied here.
-    /// </summary>
-    private List<Detection> ParseOutput(Mat output, int originalWidth, int originalHeight)
+    private static List<Detection> ParseOutput(
+        float[] data,
+        int numAttributes,
+        int numPredictions,
+        int originalWidth,
+        int originalHeight,
+        int inputSize)
     {
-        // output shape: [1, 84, N] — we need to access [row, col]
-        // where row = attribute index (0–83), col = prediction index (0..N-1)
-        int numAttributes = output.Size(1); // 84
-        int numPredictions = output.Size(2); // 8400
+        // Scale model coordinates back to the original frame size.
+        float xScale = (float)originalWidth / inputSize;
+        float yScale = (float)originalHeight / inputSize;
 
-        // Compute scale factors to map from YOLO input size back to original frame
-        float xScale = (float)originalWidth / _inputSize;
-        float yScale = (float)originalHeight / _inputSize;
+        int stride = numPredictions;
 
-        // Reshape to 2D for easier indexing: [84, N]
-        var output2D = output.Reshape(1, numAttributes);
-
-        // Collect candidates that pass the confidence threshold
         var boxes = new List<Rect>();
         var confidences = new List<float>();
         var classIds = new List<int>();
 
-        unsafe
+        for (int i = 0; i < numPredictions; i++)
         {
-            float* data = (float*)output2D.Data;
-            int stride = numPredictions; // elements per row
+            float maxScore = 0f;
+            int maxClassId = -1;
 
-            for (int i = 0; i < numPredictions; i++)
+            for (int c = 4; c < numAttributes; c++)
             {
-                // Find the class with the highest score (rows 4–83)
-                float maxScore = 0f;
-                int maxClassId = -1;
+                float score = data[c * stride + i];
 
-                for (int c = 4; c < numAttributes; c++)
+                if (score > maxScore)
                 {
-                    float score = data[c * stride + i];
-                    if (score > maxScore)
-                    {
-                        maxScore = score;
-                        maxClassId = c - 4; // COCO class ID = row index - 4
-                    }
+                    maxScore = score;
+                    maxClassId = c - 4;
                 }
-
-                // Apply confidence threshold
-                if (maxScore < Config.ConfidenceThreshold)
-                    continue;
-
-                // Filter for vehicle classes only
-                if (!Config.VehicleClassIds.Contains(maxClassId))
-                    continue;
-
-                // Extract bounding box (center format → corner format)
-                float cx = data[0 * stride + i];
-                float cy = data[1 * stride + i];
-                float w = data[2 * stride + i];
-                float h = data[3 * stride + i];
-
-                // Convert to top-left corner format and scale to original frame
-                int x1 = (int)((cx - w / 2f) * xScale);
-                int y1 = (int)((cy - h / 2f) * yScale);
-                int bw = (int)(w * xScale);
-                int bh = (int)(h * yScale);
-
-                boxes.Add(new Rect(x1, y1, bw, bh));
-                confidences.Add(maxScore);
-                classIds.Add(maxClassId);
             }
+
+            if (maxScore < Config.ConfidenceThreshold)
+                continue;
+
+            if (!Config.VehicleClassIds.Contains(maxClassId))
+                continue;
+
+            float cx = data[i];
+            float cy = data[stride + i];
+            float w = data[2 * stride + i];
+            float h = data[3 * stride + i];
+
+            int x1 = (int)((cx - w / 2f) * xScale);
+            int y1 = (int)((cy - h / 2f) * yScale);
+            int bw = (int)(w * xScale);
+            int bh = (int)(h * yScale);
+
+            boxes.Add(new Rect(x1, y1, bw, bh));
+            confidences.Add(maxScore);
+            classIds.Add(maxClassId);
         }
 
-        output2D.Dispose();
+        CvDnn.NMSBoxes(
+            boxes,
+            confidences,
+            Config.ConfidenceThreshold,
+            Config.NmsThreshold,
+            out int[] indices);
 
-        // ── Non-Maximum Suppression ───────────────────────────────────
-        CvDnn.NMSBoxes(boxes, confidences, Config.ConfidenceThreshold, Config.NmsThreshold, out int[] indices);
-
-        // ── Build final detection list ────────────────────────────────
         var detections = new List<Detection>();
+
         foreach (int idx in indices)
         {
             var box = boxes[idx];
-            var bottomCenter = new Point2f(
-                box.X + box.Width / 2f,
-                box.Y + box.Height
-            );
 
             detections.Add(new Detection
             {
-                BBox = new Rect2f(box.X, box.Y, box.Width, box.Height),
+                BBox = new Rect2f(
+                    box.X,
+                    box.Y,
+                    box.Width,
+                    box.Height),
+
                 ClassId = classIds[idx],
                 Confidence = confidences[idx],
-                BottomCenter = bottomCenter
+
+                BottomCenter = new Point2f(
+                    box.X + box.Width / 2f,
+                    box.Y + box.Height)
             });
         }
 
@@ -231,7 +240,12 @@ public class Detector : IDisposable
 
     public void Dispose()
     {
-        _net?.Dispose();
+        if (_disposed)
+            return;
+
+        _session.Dispose();
+        _disposed = true;
+
         GC.SuppressFinalize(this);
     }
 }
