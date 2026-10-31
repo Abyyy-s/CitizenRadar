@@ -9,6 +9,7 @@ obj/
 
 # Large binaries & model weights (download/export locally)
 *.onnx
+!models/yolov8n.onnx
 *.pt
 *.pth
 *.weights
@@ -16,6 +17,7 @@ obj/
 # Runtime outputs & test media
 output/
 *.mp4
+!data/traffic.mp4
 *.avi
 *.mkv
 *.csv

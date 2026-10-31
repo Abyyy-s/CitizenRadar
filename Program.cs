@@ -119,17 +119,19 @@ app.MapGet("/api/source", (WatchdogService watchdog, TelemetryStore telemetry) =
     return Results.Ok(new { source = watchdog.CurrentSource, mode = telemetry.SourceMode });
 });
 
+string port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+
 Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
 Console.WriteLine("║                          CitizenRadar v1.0                                   ║");
 Console.WriteLine("║                 AI Traffic Watchdog & Web Dashboard                          ║");
 Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
-Console.WriteLine("║  🌐 Web Dashboard: http://localhost:5000                                     ║");
-Console.WriteLine("║  📡 MJPEG Stream:   http://localhost:5000/api/stream                          ║");
-Console.WriteLine("║  📱 Mobile/LAN:    http://0.0.0.0:5000 (access from any phone on WiFi)       ║");
+Console.WriteLine($"║  🌐 Web Dashboard: http://localhost:{port,-41}║");
+Console.WriteLine($"║  📡 MJPEG Stream:   http://localhost:{port}/api/stream                       ║");
+Console.WriteLine($"║  📱 Server Host:   http://0.0.0.0:{port,-43}║");
 Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
 Console.WriteLine();
 
-app.Run("http://0.0.0.0:5000");
+app.Run($"http://0.0.0.0:{port}");
 
 // Request DTOs
 public record ConfigUpdateRequest(double SpeedLimitKmh);

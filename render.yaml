@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: citizenradar
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/status
+    envVars:
+      - key: PORT
+        value: 10000

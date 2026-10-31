@@ -238,15 +238,45 @@ To launch the backend and generate a secure, high-speed public HTTPS link with a
 
 ---
 
-### 🐳 Option 2: 24/7 Cloud Deployment with Docker
+### ☁️ Option 2: 24/7 Cloud Server Hosting (Render / Railway / Hugging Face Spaces)
 
-To run CitizenRadar on cloud VPS (DigitalOcean, AWS, GCP, Fly.io, Railway, or Render) with automatic CPU fallback:
+If you want CitizenRadar hosted **24/7 in the cloud** so friends can access it at any time without keeping your laptop awake:
+
+#### 1. Deploy on Render (100% Free)
+Render supports our pre-configured [render.yaml](file:///home/abyyy/Projects/CitezensRadar/render.yaml) Blueprint:
+1. Go to [render.com](https://render.com) and sign in with GitHub.
+2. Click **New +** → **Blueprint** (or **Web Service** → select **Docker**).
+3. Connect your repository: `https://github.com/Abyyy-s/CitizenRadar`.
+4. Render will automatically detect `render.yaml`, build the Docker container, and deploy.
+5. Your public 24/7 live URL will be: `https://citizenradar.onrender.com`.
+
+#### 2. Deploy on Railway (Fastest Docker Hosting)
+1. Go to [railway.app](https://railway.app) and click **Deploy from GitHub repo**.
+2. Select `CitizenRadar`.
+3. Railway automatically detects [railway.json](file:///home/abyyy/Projects/CitezensRadar/railway.json) & [Dockerfile](file:///home/abyyy/Projects/CitezensRadar/Dockerfile).
+4. Go to **Settings** → **Generate Domain** to get your public `https://citizenradar.up.railway.app` URL.
+
+#### 3. Deploy on Hugging Face Spaces (16GB RAM Free AI Cloud)
+1. Go to [huggingface.co/new-space](https://huggingface.co/new-space).
+2. Set Space SDK to **Docker** (Blank).
+3. Push or mirror the repository:
+   ```bash
+   git remote add space https://huggingface.co/spaces/<your-username>/citizenradar
+   git push space main
+   ```
+4. Hugging Face builds the Docker container and runs it 24/7 for free with 16GB RAM.
+
+---
+
+### 🐳 Option 3: Self-Hosted Docker Compose (VPS / Cloud VM)
+
+To run CitizenRadar on your own Virtual Private Server (DigitalOcean, AWS EC2, GCP Compute Engine, Hetzner, Oracle Cloud):
 
 ```bash
-# Build and run containerized service
+# Clone and launch background daemon
 docker compose up -d
 
-# Check live logs
+# Check live logs and CPU fallback inference
 docker compose logs -f
 ```
 

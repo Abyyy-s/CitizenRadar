@@ -19,16 +19,15 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgdiplus \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
 
-# Expose Kestrel HTTP port
+# Default port 5000 (cloud platforms like Render, Railway, Hugging Face override via $PORT)
+ENV PORT=5000
 EXPOSE 5000
-ENV ASPNETCORE_URLS=http://0.0.0.0:5000
 
-# Download default model if missing at container launch
 ENTRYPOINT ["dotnet", "CitizenRadar.dll", "data/traffic.mp4", "models/yolov8n.onnx"]
