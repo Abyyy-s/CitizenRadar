@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="100%" height="100%" style="background:#090514; border-radius:16px; overflow:hidden; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0518" />
+      <stop offset="50%" stop-color="#140a2e" />
+      <stop offset="100%" stop-color="#1e0f42" />
+    </linearGradient>
+
+    <!-- Glowing Violet Accents -->
+    <radialGradient id="glow-purple" cx="20%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glow-cyan" cx="80%" cy="70%" r="50%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.4" />
+      <stop offset="70%" stop-color="#7C3AED" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Radar Sweep Gradient -->
+    <linearGradient id="sweep-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#F3E8FF" />
+      <stop offset="100%" stop-color="#C084FC" />
+    </linearGradient>
+    <linearGradient id="badge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+
+    <!-- Subtle Grid Pattern -->
+    <pattern id="cyber-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2E1065" stroke-width="0.75" stroke-opacity="0.4" />
+      <circle cx="40" cy="40" r="1" fill="#7C3AED" fill-opacity="0.3" />
+    </pattern>
+
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="420" fill="url(#bg-grad)" />
+  <rect width="1200" height="420" fill="url(#cyber-grid)" />
+  <circle cx="200" cy="120" r="300" fill="url(#glow-purple)" />
+  <circle cx="1000" cy="300" r="350" fill="url(#glow-cyan)" />
+
+  <!-- Animated Radar Reticle (Right Side) -->
+  <g transform="translate(950, 210)">
+    <circle cx="0" cy="0" r="160" fill="url(#radar-glow)" />
+    <!-- Concentric Rings -->
+    <circle cx="0" cy="0" r="160" fill="none" stroke="#7C3AED" stroke-width="1.2" stroke-opacity="0.3" stroke-dasharray="4,6" />
+    <circle cx="0" cy="0" r="120" fill="none" stroke="#8B5CF6" stroke-width="1.2" stroke-opacity="0.5" />
+    <circle cx="0" cy="0" r="80"  fill="none" stroke="#A78BFA" stroke-width="1"   stroke-opacity="0.6" stroke-dasharray="3,3" />
+    <circle cx="0" cy="0" r="40"  fill="none" stroke="#C084FC" stroke-width="1.5" stroke-opacity="0.8" />
+    <circle cx="0" cy="0" r="4"   fill="#34D399" filter="url(#neon-glow)" />
+
+    <!-- Crosshairs -->
+    <line x1="-170" y1="0" x2="170" y2="0" stroke="#7C3AED" stroke-width="0.8" stroke-opacity="0.4" />
+    <line x1="0" y1="-170" x2="0" y2="170" stroke="#7C3AED" stroke-width="0.8" stroke-opacity="0.4" />
+
+    <!-- Radar Sweep Cone -->
+    <path d="M 0 0 L 113 -113 A 160 160 0 0 1 160 0 Z" fill="url(#sweep-grad)" opacity="0.65">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="4s" repeatCount="indefinite" />
+    </path>
+
+    <!-- Detected Target Blips -->
+    <g transform="translate(55, -45)">
+      <circle cx="0" cy="0" r="4.5" fill="#EF4444" filter="url(#neon-glow)" />
+      <circle cx="0" cy="0" r="10" fill="none" stroke="#EF4444" stroke-width="1" opacity="0.7">
+        <animate attributeName="r" values="4;14;4" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.9;0.1;0.9" dur="2s" repeatCount="indefinite" />
+      </circle>
+      <text x="12" y="3" fill="#F87171" font-size="10" font-weight="700" letter-spacing="0.5">ID:09 84KM/H</text>
+    </g>
+
+    <g transform="translate(-70, 60)">
+      <circle cx="0" cy="0" r="3.5" fill="#10B981" filter="url(#neon-glow)" />
+      <text x="8" y="3" fill="#6EE7B7" font-size="9" font-weight="600">ID:07 38KM/H</text>
+    </g>
+  </g>
+
+  <!-- Left Side: Branding & Title -->
+  <g transform="translate(80, 75)">
+    <!-- Top Pill Badge -->
+    <g>
+      <rect width="250" height="30" rx="15" fill="#1E103C" stroke="#7C3AED" stroke-width="1" />
+      <circle cx="16" cy="15" r="4.5" fill="#10B981" filter="url(#neon-glow)">
+        <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+      <text x="28" y="19" fill="#E9D5FF" font-size="11.5" font-weight="700" letter-spacing="1.2">NVIDIA CUDA 13.4 ACTIVE</text>
+      <text x="200" y="19" fill="#10B981" font-size="11.5" font-weight="800">95 FPS</text>
+    </g>
+
+    <!-- Main Title -->
+    <text x="0" y="85" fill="url(#text-grad)" font-size="52" font-weight="900" letter-spacing="-1.5">CITIZEN RADAR</text>
+    
+    <!-- Subtitle -->
+    <text x="0" y="120" fill="#DDD6FE" font-size="17" font-weight="500" letter-spacing="0.2">
+      Autonomous Edge AI Traffic Watchdog &amp; Monocular Speed Radar
+    </text>
+
+    <!-- Description -->
+    <text x="0" y="152" fill="#A78BFA" font-size="13.5" font-weight="400">
+      Zero-Python All-.NET 8 Engine • Perspective Homography Projection • YOLOv8n Tensor Acceleration
+    </text>
+
+    <!-- Feature Tags -->
+    <g transform="translate(0, 185)">
+      <!-- Tag 1 -->
+      <rect x="0" y="0" width="115" height="28" rx="8" fill="#180B33" stroke="#4C1D95" stroke-width="1" />
+      <text x="12" y="18" fill="#F3E8FF" font-size="11" font-weight="600">⚡ C# 12 / .NET 8</text>
+
+      <!-- Tag 2 -->
+      <rect x="125" y="0" width="135" height="28" rx="8" fill="#180B33" stroke="#4C1D95" stroke-width="1" />
+      <text x="137" y="18" fill="#F3E8FF" font-size="11" font-weight="600">🚀 RTX 4050 CUDA</text>
+
+      <!-- Tag 3 -->
+      <rect x="270" y="0" width="140" height="28" rx="8" fill="#180B33" stroke="#4C1D95" stroke-width="1" />
+      <text x="282" y="18" fill="#F3E8FF" font-size="11" font-weight="600">📐 Plane Homography</text>
+
+      <!-- Tag 4 -->
+      <rect x="420" y="0" width="130" height="28" rx="8" fill="#180B33" stroke="#4C1D95" stroke-width="1" />
+      <text x="432" y="18" fill="#F3E8FF" font-size="11" font-weight="600">🟣 Dribbble Violet UI</text>
+    </g>
+
+    <!-- Quick Stats Cards in Hero -->
+    <g transform="translate(0, 235)">
+      <!-- Metric 1 -->
+      <rect x="0" y="0" width="150" height="54" rx="10" fill="#130829" stroke="#3B156B" stroke-width="1" />
+      <text x="14" y="20" fill="#9CA3AF" font-size="10" font-weight="700" letter-spacing="0.5">INFERENCE LATENCY</text>
+      <text x="14" y="42" fill="#FFFFFF" font-size="18" font-weight="800">10.5 ms</text>
+      <text x="94" y="42" fill="#10B981" font-size="11" font-weight="700">CUDA</text>
+
+      <!-- Metric 2 -->
+      <rect x="162" y="0" width="150" height="54" rx="10" fill="#130829" stroke="#3B156B" stroke-width="1" />
+      <text x="176" y="20" fill="#9CA3AF" font-size="10" font-weight="700" letter-spacing="0.5">SPEED ACCURACY</text>
+      <text x="176" y="42" fill="#FFFFFF" font-size="18" font-weight="800">±2.4 km/h</text>
+      <text x="268" y="42" fill="#A855F7" font-size="11" font-weight="700">Calib</text>
+
+      <!-- Metric 3 -->
+      <rect x="324" y="0" width="170" height="54" rx="10" fill="#130829" stroke="#3B156B" stroke-width="1" />
+      <text x="338" y="20" fill="#9CA3AF" font-size="10" font-weight="700" letter-spacing="0.5">STREAM THROUGHPUT</text>
+      <text x="338" y="42" fill="#FFFFFF" font-size="18" font-weight="800">95.1 FPS</text>
+      <text x="424" y="42" fill="#34D399" font-size="11" font-weight="700">Real-time</text>
+    </g>
+  </g>
+
+  <!-- Bottom Accent Border -->
+  <line x1="0" y1="418" x2="1200" y2="418" stroke="url(#badge-grad)" stroke-width="2.5" />
+</svg>
