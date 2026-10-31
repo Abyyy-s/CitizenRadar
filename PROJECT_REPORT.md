@@ -1,4 +1,4 @@
-# CITIZENRADAR: CAMERA-BASED VEHICLE SPEED ESTIMATION AND OVERSPEED VIOLATION DETECTION USING YOLOV8, NVIDIA CUDA ACCELERATION, AND .NET 8
+# CITIZENRADAR: CAMERA-BASED VEHICLE SPEED ESTIMATION AND OVERSPEED VIOLATION DETECTION USING YOLOV8 AND .NET 8
 
 ### Project Report
 *submitted to the APJ Abdul Kalam Technological University*  
@@ -9,12 +9,12 @@
 **Computer Science and Engineering**  
 
 *by*  
-**ABY S BIJU (CHN24AM005)**  
 **SREEHARI A NAIR (CHN24AM058)**  
 **KRISHNA B (CHN24AM033)**  
 **PARVATI RAJAN (CHN24AM040)**  
 **HENA MARIAM ABRAHAM (CHN24AM025)**  
 **ANUGRAHA S (CHN24AM013)**  
+**ABY S BIJU (CHN24AM005)**  
 
 <br>
 
@@ -52,7 +52,7 @@ Website: www.ceconline.edu
 
 ### CERTIFICATE
 
-This is to certify that the project report titled **CITIZENRADAR: CAMERA-BASED VEHICLE SPEED ESTIMATION AND OVERSPEED VIOLATION DETECTION USING YOLOV8, NVIDIA CUDA ACCELERATION, AND .NET 8** is a bonafide record of the course project presented by **ABY S BIJU (CHN24AM005)**, **SREEHARI A NAIR (CHN24AM058)**, **KRISHNA B (CHN24AM033)**, **PARVATI RAJAN (CHN24AM040)**, **HENA MARIAM ABRAHAM (CHN24AM025)**, and **ANUGRAHA S (CHN24AM013)** in partial fulfillment of the requirements for the award of the degree **Bachelor of Technology in Computer Science and Engineering** of **APJ Abdul Kalam Technological University**.
+This is to certify that the project report titled **CITIZENRADAR: CAMERA-BASED VEHICLE SPEED ESTIMATION AND OVERSPEED VIOLATION DETECTION USING YOLOV8 AND .NET 8** is a bonafide record of the course project presented by **SREEHARI A NAIR (CHN24AM058)**, **KRISHNA B (CHN24AM033)**, **PARVATI RAJAN (CHN24AM040)**, **HENA MARIAM ABRAHAM (CHN24AM025)**, **ANUGRAHA S (CHN24AM013)**, and **ABY S BIJU (CHN24AM005)**, Fourth Semester B.Tech. degree in Computer Science and Engineering, under our guidance and supervision. This project is submitted in partial fulfillment of the requirements for the award of the degree **Bachelor of Technology in Computer Science and Engineering** of **APJ Abdul Kalam Technological University**.
 
 <br><br><br>
 
@@ -60,7 +60,7 @@ This is to certify that the project report titled **CITIZENRADAR: CAMERA-BASED V
 Dept. of Computer Engineering  
 College of Engineering Chengannur  
 
-**Head of the Department / Professor**  
+**Dr. Renu George / Professor & Head of the Department**  
 Dept. of Computer Engineering  
 College of Engineering Chengannur  
 
@@ -75,14 +75,15 @@ College of Engineering Chengannur
 | **1.** | **ABSTRACT** | 1 |
 | **2.** | **INTRODUCTION** | 2 |
 | **3.** | **OBJECTIVES** | 3 |
-| **4.** | **TOOLS & HARDWARE STACK** | 4 |
-| **5.** | **SYSTEM ARCHITECTURE** | 6 |
-| **6.** | **MATHEMATICAL METHODOLOGY** | 8 |
-| **7.** | **SYSTEM IMPLEMENTATION & INTERFACE** | 11 |
-| **8.** | **EXPERIMENTAL RESULTS & BENCHMARKS** | 16 |
-| **9.** | **TECHNICAL ANALYSIS & DISCUSSION** | 18 |
-| **10.** | **CONCLUSION & FUTURE SCOPE** | 20 |
-| **11.** | **REFERENCES** | 21 |
+| **4.** | **TOOLS USED** | 4 |
+| **5.** | **SYSTEM ARCHITECTURE** | 5 |
+| **6.** | **METHODOLOGY** | 6 |
+| **7.** | **IMPLEMENTATION** | 7 |
+| **8.** | **SYSTEM DASHBOARD & VISUALS** | 9 |
+| **9.** | **RESULTS** | 12 |
+| **10.** | **ANALYSIS** | 14 |
+| **11.** | **CONCLUSION** | 15 |
+| **12.** | **REFERENCES** | 16 |
 
 ---
 
