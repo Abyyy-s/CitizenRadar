@@ -20,9 +20,12 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.31.1" />
   </ItemGroup>
 
-  <!-- Copy the ONNX model file to the output directory if present -->
+  <!-- Copy ONNX models and sample data to the output directory -->
   <ItemGroup>
-    <None Update="models\yolov8n.onnx">
+    <None Update="models/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="data/**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

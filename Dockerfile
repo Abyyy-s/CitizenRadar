@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
+COPY --from=build /src/data /app/data
+COPY --from=build /src/models /app/models
 
 # Default port 5000 (cloud platforms like Render, Railway, Hugging Face override via $PORT)
 ENV PORT=5000

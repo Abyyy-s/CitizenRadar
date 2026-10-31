@@ -11,7 +11,34 @@ string videoPath = args.Length > 0 ? args[0] : "data/traffic.mp4";
 string modelPath = args.Length > 1 ? args[1] : Config.DefaultModelPath;
 string calibPath = args.Length > 2 ? args[2] : Config.DefaultCalibrationPath;
 
+// Helper to resolve paths relative to current working directory or AppContext.BaseDirectory
+string ResolvePath(string path)
+{
+    if (File.Exists(path)) return path;
+    var candidate = Path.Combine(AppContext.BaseDirectory, path);
+    if (File.Exists(candidate)) return candidate;
+    return path;
+}
+
+videoPath = ResolvePath(videoPath);
+modelPath = ResolvePath(modelPath);
+calibPath = ResolvePath(calibPath);
+
 // Verify files
+if (!File.Exists(videoPath))
+{
+    var dataDir = Path.Combine(AppContext.BaseDirectory, "data");
+    if (Directory.Exists(dataDir))
+    {
+        var fallbackVideo = Directory.GetFiles(dataDir, "*.mp4").FirstOrDefault();
+        if (fallbackVideo != null)
+        {
+            Console.WriteLine($"[INFO] Using fallback video: {fallbackVideo}");
+            videoPath = fallbackVideo;
+        }
+    }
+}
+
 if (!File.Exists(videoPath))
 {
     Console.Error.WriteLine($"ERROR: Video file not found: {videoPath}");
