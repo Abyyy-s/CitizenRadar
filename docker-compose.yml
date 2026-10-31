@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  citizenradar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: citizenradar:latest
+    container_name: citizenradar
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:5000

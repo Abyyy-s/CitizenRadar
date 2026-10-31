@@ -17,7 +17,7 @@
 
 **CitizenRadar** is a high-throughput, monocular Computer Vision and traffic enforcement system written end-to-end in **pure C# on .NET 8**. It estimates real-world vehicle velocities $(\text{km/h})$ in real time from ordinary overhead camera feeds using **YOLOv8n**, **ByteTrack association**, and **4-point perspective plane homography**, paired with a **luxury Dribbble-inspired live analytics dashboard**.
 
-[Key Highlights](#-key-capabilities) • [Architecture](#-system-architecture) • [Mathematical Principles](#-mathematics-of-monocular-radar) • [Benchmarks](#-benchmark--performance-matrix) • [Quickstart](#-quickstart--installation) • [API Reference](#-rest-api-reference)
+[Key Highlights](#-key-capabilities) • [Architecture](#-system-architecture) • [Mathematical Principles](#-mathematics-of-monocular-radar) • [Benchmarks](#-benchmark--performance-matrix) • [Quickstart](#-quickstart--installation) • [Live Sharing](#-live-sharing-with-friends--global-hosting) • [API Reference](#-rest-api-reference)
 
 ---
 
@@ -210,6 +210,45 @@ dotnet run data/traffic.mp4 models/yolov8n.onnx
 
 ### 4. Open the Web Dashboard
 Navigate to **`http://localhost:5000`** in any modern web browser.
+
+---
+
+## 🌐 Live Sharing with Friends & Global Hosting
+
+Share your live GPU-accelerated traffic watchdog dashboard over the internet or local Wi-Fi with **zero configuration, zero router port-forwarding, and zero hosting costs**.
+
+### ⚡ Option 1: Instant One-Click Live Sharing (Worldwide HTTPS)
+
+To launch the backend and generate a secure, high-speed public HTTPS link with an interactive terminal QR code for phone scanning:
+
+```bash
+# Launch backend + global Cloudflare HTTPS tunnel + terminal QR code
+./share-live.sh
+```
+
+- 🌐 **Public URL**: Generates an instant global URL (`https://*.trycloudflare.com`) accessible from any smartphone, tablet, or PC worldwide.
+- 📱 **Local Network**: Friends on the same Wi-Fi can connect directly via `http://<your-local-ip>:5000`.
+- 📲 **Instant Scan**: Scan the rendered ASCII QR code on your laptop screen with any phone camera to instantly open the dashboard.
+- 🛑 **Clean Exit**: Press `Ctrl + C` or run `./stop-live.sh` to safely stop sharing and release all network ports.
+
+```bash
+# Stop any background live sessions cleanly
+./stop-live.sh
+```
+
+---
+
+### 🐳 Option 2: 24/7 Cloud Deployment with Docker
+
+To run CitizenRadar on cloud VPS (DigitalOcean, AWS, GCP, Fly.io, Railway, or Render) with automatic CPU fallback:
+
+```bash
+# Build and run containerized service
+docker compose up -d
+
+# Check live logs
+docker compose logs -f
+```
 
 ---
 
