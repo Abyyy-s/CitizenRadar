@@ -88,6 +88,9 @@ public class WatchdogService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Yield immediately so ASP.NET Kestrel finishes starting and binds to the HTTP port
+        await Task.Yield();
+
         // 1. Initialise Calibration
         var calibrator = new Calibrator();
         if (File.Exists(_calibPath))
@@ -160,10 +163,12 @@ public class WatchdogService : BackgroundService
 
                 int frameNumber = 0;
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var frameStopwatch = System.Diagnostics.Stopwatch.StartNew();
                 int fpsCounter = 0;
 
                 while (!stoppingToken.IsCancellationRequested && reader.Read(frame) && !frame.Empty())
                 {
+                    frameStopwatch.Restart();
                     if (_sourceChanged)
                         break;
 
@@ -247,6 +252,11 @@ public class WatchdogService : BackgroundService
 
                     frameNumber++;
 
+                    // Frame pacing: pace playback to target FPS and yield thread pool
+                    int targetFrameMs = reader.Fps > 0 ? (int)(1000.0 / reader.Fps) : 33;
+                    int elapsedMs = (int)frameStopwatch.ElapsedMilliseconds;
+                    int waitMs = Math.Max(1, targetFrameMs - elapsedMs);
+                    await Task.Delay(waitMs, stoppingToken);
                 }
             }
 

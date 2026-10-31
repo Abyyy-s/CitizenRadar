@@ -30,6 +30,6 @@ COPY --from=build /src/models /app/models
 
 # Default port 5000 (cloud platforms like Render, Railway, Hugging Face override via $PORT)
 ENV PORT=5000
-EXPOSE 5000
+EXPOSE 5000 10000
 
 ENTRYPOINT ["dotnet", "CitizenRadar.dll", "data/traffic.mp4", "models/yolov8n.onnx"]

@@ -4,7 +4,9 @@ using CitizenRadar.Core;
 using CitizenRadar.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+string port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 500 * 1024 * 1024);
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Parse CLI Arguments
 string videoPath = args.Length > 0 ? args[0] : "data/traffic.mp4";
@@ -145,8 +147,6 @@ app.MapGet("/api/source", (WatchdogService watchdog, TelemetryStore telemetry) =
 {
     return Results.Ok(new { source = watchdog.CurrentSource, mode = telemetry.SourceMode });
 });
-
-string port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 
 Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
 Console.WriteLine("║                          CitizenRadar v1.0                                   ║");
