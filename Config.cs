@@ -53,6 +53,12 @@ public static class Config
     /// <summary>Input image size for YOLOv8 inference (square).</summary>
     public const int InputSize = 640;
 
+    /// <summary>Run the detector on every Nth frame; the tracker predicts between detector frames.</summary>
+    public const int DetectionIntervalFrames = 2;
+
+    /// <summary>Maximum rate sent to browser clients; processing is not limited by this.</summary>
+    public const int StreamMaxFps = 15;
+
     /// <summary>
     /// COCO class IDs for vehicles.
     /// car=2, motorcycle=3, bus=5, truck=7
@@ -62,6 +68,9 @@ public static class Config
     // ── Tracking ──────────────────────────────────────────────────────
     /// <summary>Minimum IoU to consider a detection as matching an existing track.</summary>
     public const float IouThreshold = 0.3f;
+
+    /// <summary>Maximum centre displacement allowed during association, in pixels.</summary>
+    public const float MaxTrackCenterDistancePx = 260f;
 
     /// <summary>
     /// Number of consecutive frames a track can go unmatched before being deregistered.

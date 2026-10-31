@@ -12,6 +12,7 @@ public class FrameBroadcaster
     private byte[]? _latestFrameJpeg;
     private readonly object _lock = new();
     private long _frameSequence = 0;
+    private long _lastEncodeTimestamp;
 
     /// <summary>
     /// Encodes and updates the latest processed frame.
@@ -20,8 +21,14 @@ public class FrameBroadcaster
     {
         if (frame.Empty()) return;
 
-        // Encode to JPEG (quality 75 for optimal speed and visual clarity)
-        Cv2.ImEncode(".jpg", frame, out byte[] jpegBytes, new ImageEncodingParam(ImwriteFlags.JpegQuality, 75));
+        long now = System.Diagnostics.Stopwatch.GetTimestamp();
+        long minInterval = System.Diagnostics.Stopwatch.Frequency / Config.StreamMaxFps;
+        if (now - Interlocked.Read(ref _lastEncodeTimestamp) < minInterval)
+            return;
+        Interlocked.Exchange(ref _lastEncodeTimestamp, now);
+
+        // Limit browser encoding so CPU time stays available for detection and tracking.
+        Cv2.ImEncode(".jpg", frame, out byte[] jpegBytes, new ImageEncodingParam(ImwriteFlags.JpegQuality, 65));
 
         lock (_lock)
         {

@@ -26,6 +26,21 @@ public class Track
     /// <summary>The most recent bounding box, used for IoU matching in the next frame.</summary>
     public Rect2f LastBBox { get; set; }
 
+    /// <summary>Last bounding box confirmed by the detector, before prediction.</summary>
+    public Rect2f LastObservedBBox { get; set; }
+
+    /// <summary>Constant-velocity estimate in pixels per frame.</summary>
+    public Point2f Velocity { get; set; }
+
+    /// <summary>Frame number of the last detector-confirmed observation.</summary>
+    public int LastObservedFrame { get; set; }
+
+    /// <summary>Number of consecutive detector hits for this track.</summary>
+    public int HitStreak { get; set; }
+
+    /// <summary>Total detector-confirmed observations for this track.</summary>
+    public int TotalHits { get; set; }
+
     /// <summary>
     /// Number of consecutive frames where this track was not matched to any detection.
     /// When this exceeds Config.TrackMaxMissedFrames, the track is deregistered.
@@ -44,6 +59,11 @@ public class Track
         ClassId = classId;
         LastBBox = initialBBox;
         MissedFrames = 0;
+        LastObservedBBox = initialBBox;
+        Velocity = new Point2f(0, 0);
+        LastObservedFrame = frameNumber;
+        HitStreak = 1;
+        TotalHits = 1;
         SpeedKmh = 0;
         IsViolation = false;
         PositionHistory.Add((frameNumber, initialPosition));

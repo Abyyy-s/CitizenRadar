@@ -1,233 +1,716 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CitizenRadar — AI Traffic Watchdog</title>
-  <link rel="stylesheet" href="app.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ECEFF3">
+  <meta name="description" content="CitizenRadar — AI Traffic Operations & Safety Intelligence">
+  <title>CitizenRadar — Traffic Operations Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css?v=6">
 </head>
 <body>
-  <!-- Header -->
-  <header class="app-header">
-    <div class="brand">
-      <div class="radar-icon">
-        <span class="pulse-ring"></span>
-        <span class="pulse-ring delay"></span>
-        <span class="core-dot"></span>
-      </div>
-      <div>
-        <h1 class="brand-title">CitizenRadar</h1>
-        <p class="brand-subtitle">Monocular Vision Speed Watchdog • .NET 8 + OpenCV DNN</p>
-      </div>
-    </div>
 
-    <div class="header-status">
-      <div class="status-pill active" id="status-pill">
-        <span class="status-dot"></span>
-        <span id="status-label">RADAR ACTIVE</span>
-      </div>
-      <div class="fps-badge">
-        <span id="stat-fps">30.0</span> FPS
-      </div>
-      <div class="clock" id="live-clock">12:00:00</div>
-    </div>
-  </header>
+<div class="viewport-backdrop">
 
-  <!-- Source Controls Bar -->
-  <div class="source-bar">
-    <div class="source-bar-left">
-      <div class="source-mode-indicator" id="source-mode">
-        <span class="source-icon" id="source-icon">📁</span>
-        <span class="source-label" id="source-label">data/traffic.mp4</span>
+  <!-- ─── FLOATING DASHBOARD CANVAS CARD (Dribbble Style) ─── -->
+  <main class="dashboard-card" id="dashboard-card">
+
+    <!-- ─── TOP NAVIGATION BAR ───────────────────────────── -->
+    <header class="card-nav">
+      <!-- Brand Logo -->
+      <div class="nav-brand">
+        <div class="brand-glyph" aria-hidden="true">
+          <span class="glyph-circle"></span>
+          <span class="glyph-radar"></span>
+          <span class="glyph-dot"></span>
+        </div>
+        <div class="brand-info">
+          <strong class="brand-title">CitizenRadar</strong>
+        </div>
       </div>
-    </div>
-    <div class="source-bar-right">
-      <button id="btn-upload" class="btn btn-source">
-        <span class="btn-icon">📤</span>
-        Upload Video
-      </button>
-      <input type="file" id="file-input" accept=".mp4,.avi,.mkv,.mov,.webm" style="display:none">
-      <button id="btn-go-live" class="btn btn-live">
-        <span class="live-dot-btn"></span>
-        Go Live
-      </button>
-    </div>
-  </div>
 
-  <!-- Calibration Warning Banner (shown when source changes) -->
-  <div class="calib-warning-banner" id="calib-warning-banner" style="display:none;">
-    <span class="calib-warning-icon">⚠️</span>
-    <span class="calib-warning-text">
-      <strong>New video source detected.</strong> Road calibration may be inaccurate for this camera angle.
-      Click <em>"Calibrate Road Points"</em> and enter road dimensions for accurate speed readings.
-    </span>
-    <button class="btn btn-ghost calib-warning-dismiss" id="calib-warning-dismiss">✕</button>
-  </div>
+      <!-- Horizontal Pill Tabs (matching Dribbble reference) -->
+      <nav class="pill-tabs" id="nav-tabs" aria-label="Main Navigation">
+        <div class="pill-indicator" id="pill-indicator" aria-hidden="true"></div>
+        <button class="pill-tab active" data-tab="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span>Overview</span>
+        </button>
+        <button class="pill-tab" data-tab="feed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><circle cx="12" cy="12" r="3"/><path d="M2 12C4.5 6.5 8.5 4 12 4s7.5 2.5 10 8c-2.5 5.5-6.5 8-10 8S4.5 17.5 2 12z"/></svg>
+          <span>Live Feed</span>
+          <span class="live-dot-tag" id="tag-feed-live">LIVE</span>
+        </button>
+        <button class="pill-tab" data-tab="violations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Violations</span>
+          <span class="pill-count" id="nav-violation-count">0</span>
+        </button>
+        <button class="pill-tab" data-tab="analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 4-6"/></svg>
+          <span>Analytics</span>
+        </button>
+        <button class="pill-tab" data-tab="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
+      </nav>
 
-  <!-- Main Dashboard Layout -->
-  <main class="dashboard-grid">
-    <!-- Left Column: Video & Calibration -->
-    <section class="viewport-section">
-      <div class="card video-card">
-        <div class="card-header">
-          <div class="card-title-group">
-            <span class="icon">📹</span>
-            <h2>Live Camera Feed & Spatial Tracking</h2>
-          </div>
-          <div class="controls-group">
-            <button id="btn-toggle-calib" class="btn btn-secondary">
-              <span class="btn-icon">📐</span>
-              <span id="btn-calib-text">Calibrate Road Points</span>
-            </button>
-            <button id="btn-reset-calib" class="btn btn-ghost" style="display: none;">
-              Reset Points
-            </button>
+      <!-- Right Actions: Search, Notifications, Theme, Avatar -->
+      <div class="nav-actions">
+        <!-- Search -->
+        <button class="icon-circle-btn" id="btn-search-toggle" aria-label="Search" title="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+
+        <!-- Sound Chime Toggle -->
+        <button class="icon-circle-btn" id="btn-sound-toggle" aria-label="Toggle Radar Chime" title="Radar Sound Cues (Off)">
+          <svg class="sound-on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg class="sound-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
+
+        <!-- Notification Bell with Dropdown -->
+        <div class="notif-wrapper">
+          <button class="icon-circle-btn notif-btn" id="btn-notif" aria-label="Notifications" title="Recent Alerts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge" id="notif-count">0</span>
+          </button>
+          <div class="notif-popover" id="notif-popover" hidden>
+            <div class="notif-head">
+              <strong>Recent Violations</strong>
+              <span id="notif-pop-count">0 alerts</span>
+            </div>
+            <ul class="notif-list" id="notif-list">
+              <li class="notif-empty">No active violation alerts</li>
+            </ul>
           </div>
         </div>
 
-        <div class="video-container" id="video-wrapper">
-          <img id="live-stream" src="/api/stream" alt="Live Camera Feed" />
-          <canvas id="calibration-canvas"></canvas>
+        <!-- Theme Toggle (Exact Dribbble Purple / Luxury Light vs Dark Radar) -->
+        <button class="icon-circle-btn" id="btn-theme-toggle" aria-label="Toggle Theme" title="Toggle Light / Dark mode">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
 
-          <!-- Drag-and-drop overlay -->
-          <div class="drop-overlay" id="drop-overlay">
-            <div class="drop-overlay-content">
-              <span class="drop-icon">📥</span>
-              <span class="drop-text">Drop video file here</span>
+        <!-- Node Status Indicator -->
+        <div class="node-pill">
+          <span class="live-status-dot" id="status-dot"></span>
+          <div class="node-pill-text">
+            <strong id="status-title">RADAR ACTIVE</strong>
+            <small id="status-fps">45.0 FPS</small>
+          </div>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 1: OVERVIEW (EXACT DRIBBBLE SHOT REPLICA)
+    ════════════════════════════════════════════════════════ -->
+    <section class="tab-content active" id="tab-overview">
+
+      <!-- Title & Filters Bar -->
+      <div class="overview-header">
+        <div class="title-group">
+          <h1 class="page-title">Overview</h1>
+        </div>
+        <div class="filter-group">
+          <button class="pill-btn-outline" id="btn-tune-filter" title="Filter settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mini-icon"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          </button>
+          <div class="dropdown-wrapper">
+            <button class="pill-btn-outline pill-dropdown" id="btn-date-filter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mini-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span id="date-filter-label">Live Stream</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron-icon"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Row: 4 Metric Stats (matching reference) -->
+      <div class="metrics-row">
+        <!-- Stat 1: Total Tracked (Total Savings style) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Total Observed</span>
+          </div>
+          <div class="stat-value-group">
+            <strong class="stat-num" id="stat-total" data-val="0">0</strong>
+            <span class="stat-tag tag-green" id="tag-total-trend">↗ +12% session</span>
+          </div>
+          <small class="stat-sub">Unique vehicles detected</small>
+        </div>
+
+        <!-- Stat 2: Active in Frame (Tracked style) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Tracked in Frame</span>
+          </div>
+          <div class="stat-value-group">
+            <strong class="stat-num" id="stat-active" data-val="0">0</strong>
+            <span class="stat-tag tag-green" id="tag-active-trend">● live feed</span>
+          </div>
+          <small class="stat-sub">Active ByteTrack identities</small>
+        </div>
+
+        <!-- Stat 3: Active Alerts (Active Alerts style) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Speed Violations</span>
+          </div>
+          <div class="stat-value-group">
+            <strong class="stat-num stat-alert" id="stat-violations" data-val="0">0</strong>
+            <span class="stat-tag tag-red" id="tag-vio-pct">0% rate</span>
+          </div>
+          <small class="stat-sub">Exceeding speed limit</small>
+        </div>
+
+        <!-- Stat 4: Average Speed / Queries (AI Queries style) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Average Speed</span>
+          </div>
+          <div class="stat-value-group">
+            <strong class="stat-num" id="stat-avg" data-val="0">0.0</strong>
+            <span class="stat-unit">km/h</span>
+            <span class="stat-tag tag-purple" id="tag-fps">45 FPS</span>
+          </div>
+          <small class="stat-sub">Calculated via Homography</small>
+        </div>
+      </div>
+
+
+      <!-- Middle Section: Wave Trend Chart + Recent Alerts -->
+      <div class="dashboard-grid-middle">
+
+        <!-- Left: Velocity & Traffic Flow Wave Trend Chart (Sony XM5 Price Trend style) -->
+        <div class="panel-box trend-chart-box">
+          <div class="panel-box-header">
+            <div>
+              <h2 class="box-title">Traffic Velocity &amp; Flow — Trend</h2>
+              <p class="box-sub">Live speed trajectory &amp; overspeed incidents across detections</p>
+            </div>
+            <div class="chart-legend-pills">
+              <span class="legend-item"><i class="legend-line line-current"></i> Current</span>
+              <span class="legend-item"><i class="legend-line line-limit"></i> Limit (40)</span>
             </div>
           </div>
+          <div class="wave-chart-container">
+            <canvas id="wave-trend-canvas" aria-label="Live Traffic Trend Wave Chart"></canvas>
+          </div>
+        </div>
 
-          <!-- Live mode badge -->
-          <div class="live-badge" id="live-badge" style="display:none;">
-            <span class="live-rec-dot"></span>
-            LIVE
+        <!-- Right: Recent Alerts (Recent Alerts card style) -->
+        <div class="panel-box alerts-box">
+          <div class="panel-box-header">
+            <div>
+              <h2 class="box-title">Recent Alerts</h2>
+              <p class="box-sub">Real-time overspeed triggers</p>
+            </div>
+            <button class="pill-link" id="btn-view-all-alerts">View all →</button>
+          </div>
+          <div class="alerts-list-wrap">
+            <ul class="alerts-list" id="recent-alerts-list">
+              <!-- Dynamically populated from API -->
+              <li class="alert-empty-item">
+                <span class="alert-icon-ring">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </span>
+                <div class="alert-info">
+                  <strong>No violations in progress</strong>
+                  <small>All tracked vehicles within policy</small>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Bottom Section: Radiating Segmented Speedometer + Hourly Volume Bar Chart -->
+      <div class="dashboard-grid-bottom">
+
+        <!-- Left: RADIATING SEGMENTED SPEEDOMETER (Sales Overview style in screenshot) -->
+        <div class="panel-box speedometer-box">
+          <div class="panel-box-header">
+            <div>
+              <h2 class="box-title">Speedometer &amp; Safety</h2>
+              <p class="box-sub">Real-time road velocity monitor</p>
+            </div>
+            <button class="icon-circle-mini" id="btn-gauge-menu" aria-label="Gauge Options">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
           </div>
 
-          <!-- Interactive Calibration Banner (hidden by default) -->
-          <div id="calibration-banner" class="calibration-overlay-banner" style="display: none;">
-            <div class="step-guide">
-              <span class="badge" id="calib-step-num">Step 1</span>
-              <span id="calib-instruction">Click <strong>Top-Left</strong> corner of the road</span>
+          <!-- THE SEGMENTED SPEEDOMETER GAUGE -->
+          <div class="speedometer-canvas-wrap">
+            <canvas id="segmented-speedometer-canvas" aria-label="Segmented Radial Speedometer"></canvas>
+          </div>
+
+          <div class="speedometer-footer">
+            <div class="gauge-meta-chip">
+              <span>Threshold</span>
+              <strong id="disp-gauge-limit">40 km/h</strong>
             </div>
-            <div class="points-progress">
-              <span class="pt-indicator" id="pt-ind-1">P1</span>
-              <span class="pt-indicator" id="pt-ind-2">P2</span>
-              <span class="pt-indicator" id="pt-ind-3">P3</span>
-              <span class="pt-indicator" id="pt-ind-4">P4</span>
+            <div class="gauge-meta-chip">
+              <span>Worst Peak</span>
+              <strong id="disp-gauge-peak">—</strong>
             </div>
           </div>
         </div>
 
-        <!-- Calibration Dimension Inputs (shown during calibration) -->
-        <div id="calibration-controls" class="calibration-form" style="display: none;">
-          <div class="form-group">
-            <label for="input-road-width">Road Width (m):</label>
-            <input type="number" id="input-road-width" value="10.0" step="0.5" min="2" max="50">
+        <!-- Right: Traffic Volume Hourly Gradient Bars (Monthly Savings $25,847.00 total style) -->
+        <div class="panel-box volume-box">
+          <div class="panel-box-header">
+            <div>
+              <span class="box-sub-label">TRAFFIC VOLUME</span>
+              <div class="stat-huge-row">
+                <strong class="stat-huge" id="disp-volume-total">1,420 total</strong>
+              </div>
+            </div>
+            <div class="pill-toggle-group">
+              <button class="toggle-pill active" id="btn-toggle-hourly">Hourly</button>
+              <button class="toggle-pill" id="btn-toggle-session">Session</button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="input-road-length">Road Depth / Length (m):</label>
-            <input type="number" id="input-road-length" value="50.0" step="1.0" min="5" max="200">
+
+          <!-- GRADIENT ROUNDED PILL BARS -->
+          <div class="gradient-bars-wrap">
+            <canvas id="gradient-bars-canvas" aria-label="Hourly Traffic Volume Gradient Bar Chart"></canvas>
           </div>
-          <button id="btn-save-calib" class="btn btn-primary" disabled>
-            Save Road Geometry & Apply
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 2: LIVE FEED (CAMERA & CALIBRATION)
+    ════════════════════════════════════════════════════════ -->
+    <section class="tab-content" id="tab-feed" hidden>
+
+      <div class="overview-header">
+        <div>
+          <h1 class="page-title">Live Vision Feed</h1>
+          <p class="section-desc">Local monocular perspective transformation &amp; real-time YOLOv8 inference</p>
+        </div>
+        <div class="source-actions-bar">
+          <div class="source-badge-pill">
+            <span class="source-dot"></span>
+            <span id="feed-source-name">data/traffic.mp4</span>
+          </div>
+          <button class="pill-btn-outline" id="btn-feed-upload">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mini-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Video
+          </button>
+          <input type="file" id="file-upload-input" accept=".mp4,.avi,.mkv,.mov,.webm" hidden>
+          <button class="pill-btn-purple" id="btn-feed-live">
+            <span class="button-live-dot"></span>
+            Use Webcam
           </button>
         </div>
       </div>
+
+      <!-- Calibration notice -->
+      <div class="calib-banner" id="calib-warning-banner" hidden>
+        <span class="warning-icon">⚠</span>
+        <span><strong>Camera Calibration Recommended:</strong> This video source may have different perspective geometry.</span>
+        <button class="pill-link calib-dismiss-btn" id="calib-warning-dismiss">Dismiss</button>
+      </div>
+
+      <!-- Feed Grid: Video on Left, Speed Policy on Right -->
+      <div class="feed-layout-grid">
+
+        <!-- Left: Video Player Card with Calibration Canvas Overlay -->
+        <div class="panel-box video-player-card">
+          <div class="panel-box-header">
+            <div class="feed-header-left">
+              <span class="live-pulse-badge"><i></i>STREAMING</span>
+              <strong id="feed-frame-counter">FRAME 000000</strong>
+            </div>
+            <div class="feed-header-actions">
+              <button class="pill-btn-outline btn-sm" id="btn-toggle-calib">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mini-icon"><path d="M4 7h16M7 4v6M4 17h16m-5-3v6"/></svg>
+                <span id="btn-calib-text">Calibrate Road</span>
+              </button>
+              <button class="pill-link btn-sm" id="btn-reset-calib" hidden>Reset Points</button>
+            </div>
+          </div>
+
+          <div class="video-display-wrapper" id="video-wrapper">
+            <img id="live-stream-img" src="/api/stream" alt="Live YOLO Stream">
+            <canvas id="calibration-canvas"></canvas>
+
+            <!-- Calibration Step Guide Overlay -->
+            <div class="calib-step-overlay" id="calibration-banner" hidden>
+              <span class="step-badge" id="calib-step-num">STEP 1</span>
+              <span id="calib-instruction">Click <strong>top-left</strong> corner of road plane</span>
+              <div class="points-dots">
+                <span class="pdot" id="pdot-1">1</span>
+                <span class="pdot" id="pdot-2">2</span>
+                <span class="pdot" id="pdot-3">3</span>
+                <span class="pdot" id="pdot-4">4</span>
+              </div>
+            </div>
+
+            <!-- Drag & Drop overlay -->
+            <div class="drop-target-overlay" id="drop-overlay">
+              <span class="drop-arrow">↓</span>
+              <strong>Drop video file here</strong>
+              <small>MP4, AVI, MKV, MOV, WEBM</small>
+            </div>
+          </div>
+
+          <!-- Calibration Geometry Form (Appears when 4 points are clicked) -->
+          <div class="calib-form-tray" id="calibration-controls" hidden>
+            <div class="tray-info">
+              <strong>Apply Road Dimensions</strong>
+              <small>Enter known road width and length in metres</small>
+            </div>
+            <div class="tray-inputs">
+              <label>Width <input type="number" id="input-road-width" value="10.0" step="0.5" min="2" max="50"> m</label>
+              <label>Depth <input type="number" id="input-road-length" value="50.0" step="1" min="5" max="200"> m</label>
+              <button class="pill-btn-purple" id="btn-save-calib" disabled>Save Calibration ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Speed Policy & Live Stream Metrics -->
+        <div class="feed-sidebar">
+          <!-- Policy Card -->
+          <div class="panel-box policy-box">
+            <div class="panel-box-header">
+              <h2 class="box-title">Speed Policy</h2>
+              <span class="tag-green">ENFORCED</span>
+            </div>
+            <div class="threshold-display-block">
+              <strong class="threshold-large" id="display-limit">40</strong>
+              <span class="threshold-unit">km/h</span>
+              <p class="threshold-hint">Vehicles moving faster are flagged as speed violations.</p>
+            </div>
+
+            <!-- Speed Presets -->
+            <div class="preset-pill-grid">
+              <button class="preset-chip" data-speed="25">25 <small>school</small></button>
+              <button class="preset-chip" data-speed="30">30 <small>residential</small></button>
+              <button class="preset-chip active" data-speed="40">40 <small>urban</small></button>
+              <button class="preset-chip" data-speed="60">60 <small>avenue</small></button>
+            </div>
+
+            <div class="slider-container">
+              <div class="slider-label-row">
+                <span>Custom Threshold</span>
+                <output id="limit-output">40 km/h</output>
+              </div>
+              <input type="range" id="slider-speed-limit" min="15" max="100" value="40" step="5">
+            </div>
+          </div>
+
+          <!-- Quick Telemetry Stats -->
+          <div class="panel-box telemetry-box">
+            <div class="panel-box-header">
+              <h2 class="box-title">Stream Metrics</h2>
+              <span class="live-pulse-badge"><i></i>ACTIVE</span>
+            </div>
+            <div class="telemetry-stack">
+              <div class="telem-row">
+                <span>Inference Engine</span>
+                <strong id="feed-stat-engine">Detecting...</strong>
+              </div>
+              <div class="telem-row">
+                <span>FPS Output</span>
+                <strong id="feed-stat-fps">45.0 FPS</strong>
+              </div>
+              <div class="telem-row">
+                <span>Total Vehicles Seen</span>
+                <strong id="feed-stat-total">0</strong>
+              </div>
+              <div class="telem-row">
+                <span>Total Violations</span>
+                <strong class="text-red" id="feed-stat-vio">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </section>
 
-    <!-- Right Column: Watchdog Analytics & Violation Log -->
-    <section class="sidebar-section">
-      <!-- Speed Limit Control -->
-      <div class="card speed-limit-card">
-        <div class="card-header">
-          <span class="icon">⚠️</span>
-          <h2>Speed Limit Watchdog</h2>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 3: VIOLATIONS (FULL AUDIT TABLE)
+    ════════════════════════════════════════════════════════ -->
+    <section class="tab-content" id="tab-violations" hidden>
+
+      <div class="overview-header">
+        <div>
+          <h1 class="page-title">Violations Audit Log</h1>
+          <p class="section-desc">Historical records of detected speed policy infractions</p>
         </div>
-        <div class="speed-limit-body">
-          <div class="speed-sign">
-            <span class="speed-sign-inner" id="display-limit">40</span>
-            <span class="speed-sign-unit">km/h</span>
-          </div>
-          <div class="preset-buttons">
-            <button class="preset-btn" data-speed="25">25 (School)</button>
-            <button class="preset-btn" data-speed="30">30 (Neighborhood)</button>
-            <button class="preset-btn active" data-speed="40">40 (Urban)</button>
-            <button class="preset-btn" data-speed="60">60 (Avenue)</button>
-          </div>
-          <div class="slider-row">
-            <input type="range" id="slider-speed-limit" min="15" max="100" value="40" step="5">
-          </div>
+        <div class="filter-group">
+          <button class="pill-btn-purple" id="btn-export-csv-full">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mini-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
         </div>
       </div>
 
-      <!-- Real-Time Metrics Cards -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-icon">🚗</div>
-          <div class="metric-label">Active Tracks</div>
-          <div class="metric-value" id="stat-active">0</div>
+      <!-- Quick Summary Chips -->
+      <div class="metrics-row mini-chips-row">
+        <div class="stat-card mini-chip">
+          <span class="stat-label">Total Events</span>
+          <strong class="stat-num" id="vio-full-total">0</strong>
         </div>
-        <div class="metric-card">
-          <div class="metric-icon">📈</div>
-          <div class="metric-label">Total Observed</div>
-          <div class="metric-value" id="stat-total">0</div>
+        <div class="stat-card mini-chip">
+          <span class="stat-label">Violation Rate</span>
+          <strong class="stat-num text-red" id="vio-full-pct">0%</strong>
         </div>
-        <div class="metric-card">
-          <div class="metric-icon">⚡</div>
-          <div class="metric-label">Avg Speed</div>
-          <div class="metric-value" id="stat-avg">0.0 <span class="unit">km/h</span></div>
+        <div class="stat-card mini-chip">
+          <span class="stat-label">Avg Over Limit</span>
+          <strong class="stat-num" id="vio-full-avg-over">—</strong>
         </div>
-        <div class="metric-card violation-highlight">
-          <div class="metric-icon">🚨</div>
-          <div class="metric-label">Violations</div>
-          <div class="metric-value" id="stat-violations">0 <span class="sub" id="stat-violation-pct">(0%)</span></div>
+        <div class="stat-card mini-chip">
+          <span class="stat-label">Max Speed Seen</span>
+          <strong class="stat-num text-red" id="vio-full-peak">—</strong>
         </div>
       </div>
 
-      <!-- Live Violations Log -->
-      <div class="card violations-card">
-        <div class="card-header">
-          <span class="icon">📋</span>
-          <h2>Live Violation Watchdog Log</h2>
-          <span class="live-tag">LIVE FEED</span>
+      <!-- Full Table Card -->
+      <div class="panel-box full-table-box">
+        <div class="panel-box-header">
+          <h2 class="box-title">Recorded Infractions</h2>
+          <span class="pill-tag-count" id="vio-table-count">0 events</span>
         </div>
-        <div class="table-container">
-          <table class="violations-table">
+        <div class="table-scroll-container">
+          <table class="luxury-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>ID</th>
-                <th>Class</th>
-                <th>Speed</th>
-                <th>Delta</th>
+                <th>TIMESTAMP</th>
+                <th>TRACK ID</th>
+                <th>VEHICLE CLASS</th>
+                <th>MEASURED SPEED</th>
+                <th>LIMIT</th>
+                <th>OVERAGE</th>
               </tr>
             </thead>
-            <tbody id="violations-tbody">
-              <tr class="empty-row">
-                <td colspan="5">Listening for speed limit violations...</td>
+            <tbody id="violations-tbody-full">
+              <tr class="empty-table-row">
+                <td colspan="6">
+                  <span class="empty-icon">✓</span>
+                  No violations logged — traffic speed within normal limits
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
     </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 4: ANALYTICS (DEEP DIVE)
+    ════════════════════════════════════════════════════════ -->
+    <section class="tab-content" id="tab-analytics" hidden>
+
+      <div class="overview-header">
+        <div>
+          <h1 class="page-title">Traffic Analytics</h1>
+          <p class="section-desc">Aggregate velocity distribution &amp; compliance insights</p>
+        </div>
+      </div>
+
+      <div class="analytics-panels-grid">
+        <!-- Speed Histogram -->
+        <div class="panel-box">
+          <div class="panel-box-header">
+            <div>
+              <h2 class="box-title">Speed Distribution</h2>
+              <p class="box-sub">Vehicle counts across 10 km/h velocity buckets</p>
+            </div>
+          </div>
+          <div class="canvas-chart-pad">
+            <canvas id="histogram-canvas" aria-label="Speed distribution histogram"></canvas>
+          </div>
+        </div>
+
+        <!-- Key Session Summary Card -->
+        <div class="panel-box">
+          <div class="panel-box-header">
+            <div>
+              <h2 class="box-title">Session Performance</h2>
+              <p class="box-sub">Key highway safety indicators</p>
+            </div>
+          </div>
+          <ul class="luxury-summary-list">
+            <li>
+              <span>Compliance Rate</span>
+              <strong class="text-green" id="an-compliance-rate">98.4%</strong>
+            </li>
+            <li>
+              <span>Peak Observed Speed</span>
+              <strong id="an-peak-speed">74.8 km/h</strong>
+            </li>
+            <li>
+              <span>Average Velocity</span>
+              <strong id="an-average-speed">38.2 km/h</strong>
+            </li>
+            <li>
+              <span>Severe Infractions (> 60 km/h)</span>
+              <strong class="text-red" id="an-severe-count">2</strong>
+            </li>
+            <li>
+              <span>Total Video Frames Evaluated</span>
+              <strong id="an-total-frames">1,842</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 5: SETTINGS
+    ════════════════════════════════════════════════════════ -->
+    <section class="tab-content" id="tab-settings" hidden>
+
+      <div class="overview-header">
+        <div>
+          <h1 class="page-title">System Settings</h1>
+          <p class="section-desc">Detection parameters, video inputs &amp; hardware configuration</p>
+        </div>
+      </div>
+
+      <div class="settings-stack">
+        <!-- Policy Card -->
+        <div class="panel-box">
+          <div class="panel-box-header">
+            <h2 class="box-title">Speed Threshold Configuration</h2>
+          </div>
+          <div class="settings-item-row">
+            <div>
+              <strong>Enforcement Limit (km/h)</strong>
+              <p class="box-sub">Vehicles exceeding this threshold generate instant alert records</p>
+            </div>
+            <div class="settings-item-control">
+              <strong class="settings-large-val" id="settings-limit-label">40 km/h</strong>
+              <input type="range" id="settings-slider" min="15" max="100" value="40" step="5">
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Source Card -->
+        <div class="panel-box">
+          <div class="panel-box-header">
+            <h2 class="box-title">Video Input Stream</h2>
+          </div>
+          <div class="settings-item-row">
+            <div>
+              <strong>Active Video Input</strong>
+              <p class="box-sub" id="settings-source-detail">data/traffic.mp4</p>
+            </div>
+            <div class="settings-item-control horizontal-btns">
+              <button class="pill-btn-outline" id="settings-upload-btn">Upload MP4</button>
+              <button class="pill-btn-purple" id="settings-webcam-btn">Switch to Webcam</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- About Card -->
+        <div class="panel-box">
+          <div class="panel-box-header">
+            <h2 class="box-title">CitizenRadar Node Information</h2>
+          </div>
+          <ul class="luxury-summary-list">
+            <li><span>Version</span><strong>v2.4 (Dribbble Edition)</strong></li>
+            <li><span>Stack</span><strong>.NET 8 + YOLOv8n + OpenCV DNN</strong></li>
+            <li><span>Tracking Engine</span><strong>ByteTrack (Kalman Filter + Hungarian)</strong></li>
+            <li><span>Speed Computation</span><strong>Plane Homography Matrix</strong></li>
+          </ul>
+        </div>
+      </div>
+
+    </section>
+
   </main>
+</div>
 
-  <!-- Footer -->
-  <footer class="app-footer">
-    <span>CitizenRadar v1.0</span>
-    <span class="footer-sep">•</span>
-    <span>.NET 8 + YOLOv8 + OpenCV DNN</span>
-    <span class="footer-sep">•</span>
-    <span id="footer-source">File Mode</span>
-  </footer>
+<!-- Floating Toast Container -->
+<div class="toast-stack" id="toast-container" aria-live="polite"></div>
 
-  <!-- Toast Container -->
-  <div class="toast-container" id="toast-container"></div>
+<!-- Snapshot Detail Inspection Modal -->
+<div class="modal-backdrop" id="snapshot-modal" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge-ring">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </span>
+        <div>
+          <h3 id="modal-vehicle-title">Vehicle #5 — Speed Violation</h3>
+          <p id="modal-vehicle-subtitle">Detected at 74.8 km/h in 40 km/h zone</p>
+        </div>
+      </div>
+      <button class="modal-close-btn" id="btn-modal-close" onclick="closeSnapshotModal()" aria-label="Close modal">&times;</button>
+    </div>
 
-  <script src="app.js"></script>
+    <div class="modal-body">
+      <!-- Simulated Radar Inspection View / Bounding HUD -->
+      <div class="modal-hud-view">
+        <div class="hud-scanner-line"></div>
+        <div class="hud-target-box">
+          <span class="hud-corner tl"></span>
+          <span class="hud-corner tr"></span>
+          <span class="hud-corner bl"></span>
+          <span class="hud-corner br"></span>
+          <span class="hud-target-label" id="modal-hud-tag">ID: #5 [CAR]</span>
+          <span class="hud-speed-badge" id="modal-hud-speed">74.8 km/h</span>
+        </div>
+        <div class="hud-meta-overlay">
+          <span>COORDINATES: X: 482px | Y: 312px</span>
+          <span>EST. DISTANCE: 28.4m</span>
+          <span>PERSPECTIVE PLANE: CALIBRATED</span>
+        </div>
+      </div>
+
+      <!-- Telemetry breakdown chips -->
+      <div class="modal-telemetry-grid">
+        <div class="modal-telem-chip">
+          <small>RECORDED TIME</small>
+          <strong id="modal-telem-time">--:--:--</strong>
+        </div>
+        <div class="modal-telem-chip">
+          <small>MEASURED SPEED</small>
+          <strong class="text-red" id="modal-telem-speed">0.0 km/h</strong>
+        </div>
+        <div class="modal-telem-chip">
+          <small>SPEED LIMIT</small>
+          <strong id="modal-telem-limit">40 km/h</strong>
+        </div>
+        <div class="modal-telem-chip">
+          <small>DELTA OVERAGE</small>
+          <strong class="text-red" id="modal-telem-over">+0.0 km/h</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="pill-btn-outline" id="btn-modal-dismiss" onclick="closeSnapshotModal()">Dismiss</button>
+      <button class="pill-btn-purple" id="btn-modal-export">Export Citation Record ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Engine & Dashboard Logic -->
+<script src="charts.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

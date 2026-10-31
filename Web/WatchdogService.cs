@@ -113,6 +113,8 @@ public class WatchdogService : BackgroundService
 
         _telemetry.SourceName = _videoPath;
         _telemetry.SourceMode = "file";
+        _telemetry.InferenceEngine = detector.BackendName;
+        _telemetry.IsGpuAccelerated = detector.IsGpuAccelerated;
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -123,6 +125,7 @@ public class WatchdogService : BackgroundService
                     _videoPath = _pendingSource;
                     _sourceChanged = false;
                 }
+                tracker.Reset();
                 _notifiedViolationTracks.Clear();
                 _telemetry.Reset();
                 _telemetry.SourceName = _videoPath;
@@ -164,8 +167,11 @@ public class WatchdogService : BackgroundService
                     if (_sourceChanged)
                         break;
 
-                    // Run YOLOv8 detection
-                    var detections = detector.Detect(frame);
+                    // Run YOLOv8 detection at a lower cadence; the tracker predicts
+                    // between detector frames to keep IDs and motion continuous.
+                    var detections = frameNumber % Config.DetectionIntervalFrames == 0
+                        ? detector.Detect(frame)
+                        : new List<Detection>();
 
                     // Update IoU tracker
                     var tracks = tracker.Update(detections, frameNumber);
@@ -178,7 +184,8 @@ public class WatchdogService : BackgroundService
                     {
                         foreach (var track in tracks)
                         {
-                            _speedEstimator.Estimate(track, currentLimit);
+                            if (track.MissedFrames == 0)
+                                _speedEstimator.Estimate(track, currentLimit);
 
                             // If violation and not yet recorded for this vehicle
                             if (track.IsViolation && !_notifiedViolationTracks.Contains(track.TrackId))
@@ -240,8 +247,6 @@ public class WatchdogService : BackgroundService
 
                     frameNumber++;
 
-                    // Yield to allow smooth HTTP streaming (~25-30ms per frame matching video rate)
-                    await Task.Delay(25, stoppingToken);
                 }
             }
 
@@ -251,6 +256,12 @@ public class WatchdogService : BackgroundService
             }
 
             // Loop video if stopped at EOF
+            tracker.Reset();
+            _notifiedViolationTracks.Clear();
+            _telemetry.Reset();
+            _telemetry.NeedsCalibration = false;
+            _telemetry.SourceName = _videoPath;
+            _telemetry.SourceMode = "file";
             await Task.Delay(500, stoppingToken);
         }
     }

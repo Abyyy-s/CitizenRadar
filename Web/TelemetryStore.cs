@@ -24,7 +24,9 @@ public record TelemetrySnapshot(
     double SpeedLimitKmh,
     string SourceName,
     string SourceMode,
-    bool NeedsCalibration
+    bool NeedsCalibration,
+    string InferenceEngine,
+    bool IsGpuAccelerated
 );
 
 /// <summary>
@@ -51,6 +53,8 @@ public class TelemetryStore
     public string SourceName { get; set; } = "data/traffic.mp4";
     public string SourceMode { get; set; } = "file";
     public bool NeedsCalibration { get; set; } = false;
+    public string InferenceEngine { get; set; } = "ONNX Runtime";
+    public bool IsGpuAccelerated { get; set; } = false;
 
     public void RecordViolation(int frame, int trackId, string className, double speed, double limit)
     {
@@ -109,7 +113,9 @@ public class TelemetryStore
                 SpeedLimitKmh,
                 SourceName,
                 SourceMode,
-                NeedsCalibration
+                NeedsCalibration,
+                InferenceEngine,
+                IsGpuAccelerated
             );
         }
     }
